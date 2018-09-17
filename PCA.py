@@ -17,8 +17,8 @@ y = df.loc[:,['target']].values
 
 
 import Data_Reader
-#df, target = Data_Reader.Read_Hepmark_Microarray()
-df, target = Data_Reader.Read_Hepmark_Tissue()
+df, target = Data_Reader.Read_Hepmark_Microarray()
+#df, target = Data_Reader.Read_Hepmark_Tissue()
 #df, target = Data_Reader.Read_Hepmark_Hepmark_Paired_Tissue()
 features = df.axes[1].values
 # Add target to df
