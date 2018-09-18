@@ -66,3 +66,21 @@ def Read_Hepmark_Hepmark_Paired_Tissue_SampleSheet():
 	df = pd.read_csv(path, sep="\t", usecols=['ID', 'Normal', 'Tumor'])
 
 	return df
+
+'''
+ColonCancer
+'''
+
+def Read_GuihuaSun_PMID_26646696():
+	path = r'%s' % getcwd().replace('\\','/')
+	path = path + "/Data/ColonCancer/GuihuaSun-PMID_26646696/"
+	analyses = path + "analyses/MatureMatrix.csv"
+	raw = path + "raw/SampleSheet.txt"
+	df = pd.read_csv(analyses, sep="\t").transpose()
+	sampleSheet = pd.read_csv(raw, sep="\t")
+	print(sampleSheet)
+	print(df)
+
+	df.dropna()
+
+Read_GuihuaSun_PMID_26646696()
