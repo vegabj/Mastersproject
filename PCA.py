@@ -7,36 +7,37 @@ pca.py creates a 2-n dimentional principal component analysis of the data
 import pandas as pd
 import numpy as np
 
+# Read df
 import data_reader
-df, target = data_reader.read_hepmark_microarray()
-#df, target = data_reader.read_hepmark_tissue()
-#df, target = data_reader.read_hepmark_paired_tissue()
-#df, target = data_reader.read_guihuaSun_PMID_26646696()
+df, target, groups = data_reader.read_hepmark_microarray()
+'''
+df, target = data_reader.read_hepmark_tissue()
+df, target = data_reader.read_hepmark_paired_tissue()
+df, target = data_reader.read_guihuaSun_PMID_26646696()
+'''
+
+# Separate features and targets / meta-data
 features = df.axes[1].values
-# Add target to df
 df['target'] = target
+df['group'] = groups
+
+
 x = df.loc[:,features].values
-y = df.loc[:,'target'].values #df.axes[0].values
-idx = []
-last = df.axes[0][0]
-for i,index in enumerate(df.axes[0]):
-    #TODO This is not individuals
-    if index[:3] != last[:3]: # TODO
-        idx.append(i)
-        last = index
-idx.append(len(x))
+y = df.loc[:,'target'].values
 
 
+# Apply normalization to each group
 from sklearn.preprocessing import StandardScaler
-# Standardizing the features
 xs = []
-last = 0
-for i in idx:
-    xs.append(StandardScaler().fit_transform(x[last:i]))
-    last = i
+grouped = df.groupby('group')
 
+for groupname, group in grouped:
+    xs.append(
+        StandardScaler().fit_transform(
+            group.loc[:, features]))
+
+# Combine normalized groups
 x = np.concatenate((xs), axis=0)
-
 
 df_index = df.axes[0]
 
@@ -69,4 +70,5 @@ ax.grid()
 
 pca.explained_variance_ratio_
 
+print(finalDf)
 plt.show()

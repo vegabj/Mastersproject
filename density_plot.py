@@ -15,14 +15,13 @@ def make_density_plot(df):
         for sample in samples:
             subset = df.loc[:, [sample]]
             sns.distplot(subset, hist = False, kde = True,
-            kde_kws = {'linewidth': 3},
-            label = sample)
+                kde_kws = {'shade': True, 'linewidth': 3},
+                label = sample)
 
         plt.legend(prop={'size': 16}, title = 'Samples')
         plt.title('Density Plot with Multiple Samples')
         plt.xlabel('Expression Microarray')
         plt.ylabel('Density')
-        print(i, i+10)
         plt.show()
 
 

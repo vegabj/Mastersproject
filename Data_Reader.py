@@ -15,14 +15,14 @@ def read_hepmark_microarray():
 	df = pd.read_csv(path, sep="\t").transpose()
 	df2 = read_hepmark_microarray_sampleSheet()
 	df = df.dropna()
-	return df, df2.loc[:, 'Type']
+	return df, df2.loc[:, 'Type'], df2.loc[:, 'Code']
 
 
 def read_hepmark_microarray_sampleSheet():
 	path = r'%s' % getcwd().replace('\\','/')
 	path = path + "/Data/Hepmark-Microarray/SampleSheet-Hepmark-Microarray.txt"
 	df = pd.read_csv(path, sep="\t")
-	return df.loc[:, ['Type']]
+	return df.loc[:, ['Type', 'Code']]
 
 
 def read_hepmark_tissue():
@@ -92,3 +92,5 @@ def read_guihuaSun_PMID_26646696():
 	df.dropna()
 
 #read_guihuaSun_PMID_26646696()
+#df = read_hepmark_microarray_sampleSheet()
+#print(df)
