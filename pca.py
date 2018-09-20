@@ -10,17 +10,20 @@ import numpy as np
 # Read df
 import data_reader
 df, target, groups = data_reader.read_hepmark_microarray()
+#df, target, groups = data_reader.read_hepmark_paired_tissue()
 '''
-df, target = data_reader.read_hepmark_tissue()
-df, target = data_reader.read_hepmark_paired_tissue()
-df, target = data_reader.read_guihuaSun_PMID_26646696()
+df, target, groups = data_reader.read_hepmark_tissue()
+
+df, target, groups = data_reader.read_guihuaSun_PMID_26646696()
+df, target, groups = data_reader.read_publicCRC_GSE46622()
+df, target, groups = data_reader.read_publicCRC_PMID_26436952()
 '''
+
 
 # Separate features and targets / meta-data
 features = df.axes[1].values
 df['target'] = target
 df['group'] = groups
-
 
 x = df.loc[:,features].values
 y = df.loc[:,'target'].values
@@ -57,7 +60,7 @@ ax = fig.add_subplot(1,1,1)
 ax.set_xlabel('Principal Component 1', fontsize = 15)
 ax.set_ylabel('Principal Component 2', fontsize = 15)
 ax.set_title('2 component PCA Hepmark-Microarray', fontsize = 20)
-targets = ['Normal', 'Tumor', 'Undefined']
+targets = set(y)
 colors = ['r', 'g', 'b']
 for target, color in zip(targets,colors):
     indicesToKeep = finalDf['target'] == target
