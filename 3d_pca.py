@@ -1,10 +1,18 @@
+'''
+Vegard Bjørgan 2018
+
+pca.py creates a three dimentional principal component analysis of the data
+'''
+
 import pandas as pd
 import numpy as np
 
-import Data_Reader
-df, target = Data_Reader.Read_Hepmark_Microarray()
-#df, target = Data_Reader.Read_Hepmark_Tissue()
-#df, target = Data_Reader.Read_Hepmark_Hepmark_Paired_Tissue()
+import data_reader
+df, target = data_reader.read_hepmark_microarray()
+#df, target = data_reader.read_hepmark_tissue()
+#df, target = data_reader.read_hepmark_paired_tissue()
+#df, target = data_reader.read_guihuaSun_PMID_26646696()
+
 features = df.axes[1].values
 # Add target to df
 df['target'] = target

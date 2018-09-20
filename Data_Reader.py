@@ -1,31 +1,37 @@
+'''
+Vegard Bjørgan 2018
+
+reader for raw data files
+'''
+
 import pandas as pd
 import numpy as np
 from os import getcwd
 import re
 
-def Read_Hepmark_Microarray():
+def read_hepmark_microarray():
 	path = r'%s' % getcwd().replace('\\','/')
 	path = path + "/Data/Hepmark-Microarray/Hepmark-Microarray.csv"
 	df = pd.read_csv(path, sep="\t").transpose()
-	df2 = Read_Hepmark_Microarray_SampleSheet()
+	df2 = read_hepmark_microarray_sampleSheet()
 	df = df.dropna()
 	return df, df2.loc[:, 'Type']
 
 
-def Read_Hepmark_Microarray_SampleSheet():
+def read_hepmark_microarray_sampleSheet():
 	path = r'%s' % getcwd().replace('\\','/')
 	path = path + "/Data/Hepmark-Microarray/SampleSheet-Hepmark-Microarray.txt"
 	df = pd.read_csv(path, sep="\t")
 	return df.loc[:, ['Type']]
 
 
-def Read_Hepmark_Tissue():
+def read_hepmark_tissue():
 	path = r'%s' % getcwd().replace('\\','/')
 	path = path + "/Data/Hepmark-Tissue/MatureMatrix.csv"
 	df = pd.read_csv(path, sep="\t").transpose()
 	# Setup tumor/ normal df
 	# TODO: Samples not used
-	#samples = Read_Hepmark_Tissue_SampleNames()
+	#samples = read_hepmark_tissue_samplenames()
 	d = {'Type': []}
 	for value in df.axes[0].values:
 		if "n" in value: # TODO: Bad practice
@@ -36,7 +42,7 @@ def Read_Hepmark_Tissue():
 	return df, targets
 
 
-def Read_Hepmark_Tissue_SampleNames():
+def read_hepmark_tissue_samplenames():
 	path = r'%s' % getcwd().replace('\\','/')
 	path = path + "/Data/Hepmark-Tissue/SampleNamesHEP-28Mar2017.txt"
 	df = pd.read_csv(path, sep="\t", usecols=['Normal', 'Tumor'])
@@ -44,11 +50,12 @@ def Read_Hepmark_Tissue_SampleNames():
 	return df
 
 
-def Read_Hepmark_Hepmark_Paired_Tissue():
+def read_hepmark_paired_tissue():
 	path = r'%s' % getcwd().replace('\\','/')
 	path = path + "/Data/Hepmark-Paired-Tissue/MatureMatrix.csv"
 	df = pd.read_csv(path, sep="\t").transpose()
 	d = {'Type': []}
+	# TODO update
 	for value in df.axes[0].values:
 		if "N" in value:
 			d['Type'] += ['Normal']
@@ -60,7 +67,7 @@ def Read_Hepmark_Hepmark_Paired_Tissue():
 
 	return df, targets
 
-def Read_Hepmark_Hepmark_Paired_Tissue_SampleSheet():
+def read_hepmark_paired_tissue_samplesheet():
 	path = r'%s' % getcwd().replace('\\','/')
 	path = path + "/Data/Hepmark-Paired-Tissue/SampleSheetPairedSamples-8Mar2017.txt"
 	df = pd.read_csv(path, sep="\t", usecols=['ID', 'Normal', 'Tumor'])
@@ -71,7 +78,7 @@ def Read_Hepmark_Hepmark_Paired_Tissue_SampleSheet():
 ColonCancer
 '''
 
-def Read_GuihuaSun_PMID_26646696():
+def read_guihuaSun_PMID_26646696():
 	path = r'%s' % getcwd().replace('\\','/')
 	path = path + "/Data/ColonCancer/GuihuaSun-PMID_26646696/"
 	analyses = path + "analyses/MatureMatrix.csv"
@@ -80,7 +87,8 @@ def Read_GuihuaSun_PMID_26646696():
 	sampleSheet = pd.read_csv(raw, sep="\t")
 	print(sampleSheet)
 	print(df)
+	# TODO
 
 	df.dropna()
 
-Read_GuihuaSun_PMID_26646696()
+#read_guihuaSun_PMID_26646696()

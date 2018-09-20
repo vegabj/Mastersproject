@@ -1,11 +1,17 @@
+'''
+Vegard Bjørgan 2018
+
+pca.py creates a 2-n dimentional principal component analysis of the data
+'''
+
 import pandas as pd
 import numpy as np
 
-import Data_Reader
-df, target = Data_Reader.Read_Hepmark_Microarray()
-#df, target = Data_Reader.Read_Hepmark_Tissue()
-#df, target = Data_Reader.Read_Hepmark_Hepmark_Paired_Tissue()
-#df, target = Data_Reader.Read_GuihuaSun_PMID_26646696()
+import data_reader
+df, target = data_reader.read_hepmark_microarray()
+#df, target = data_reader.read_hepmark_tissue()
+#df, target = data_reader.read_hepmark_paired_tissue()
+#df, target = data_reader.read_guihuaSun_PMID_26646696()
 features = df.axes[1].values
 # Add target to df
 df['target'] = target
@@ -14,6 +20,7 @@ y = df.loc[:,'target'].values #df.axes[0].values
 idx = []
 last = df.axes[0][0]
 for i,index in enumerate(df.axes[0]):
+    #TODO This is not individuals
     if index[:3] != last[:3]: # TODO
         idx.append(i)
         last = index
