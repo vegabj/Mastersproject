@@ -1,8 +1,9 @@
 # Mastersproject
-Machine Learning Classifier for different biases in datasets
+Machine learning classifier for different biases using biological miRNA datasets.
 
 
 ## Requirements
 * Numpy
 * Pandas
 * Scikit-learn
+* Seaborn
