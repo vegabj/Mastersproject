@@ -42,6 +42,21 @@ def read_hepmark_tissue():
 	return df, df2.loc[:, 'type'], df2.loc[:, 'group']
 
 
+def read_hepmark_tissue_formatted():
+	path = r'%s' % getcwd().replace('\\','/')
+	sampleSheet = path + "/Data/Hepmark-Tissue/SampleNamesHEP-28Mar2017.txt"
+	path = path + "/Data/Hepmark-Tissue/MatureMatrixFormatted.csv"
+	df = pd.read_csv(path, index_col=0)
+	sampleSheetDf = pd.read_csv(sampleSheet, sep="\t", usecols=['ID', 'Normal', 'Tumor'], index_col=['ID'])
+	sampleSheetDf = sampleSheetDf.dropna()
+	index = np.concatenate([sampleSheetDf.loc[:,'Normal'], sampleSheetDf.loc[:,'Tumor']], axis = 0)
+	type = ['Tumor' if idx in sampleSheetDf.loc[:, 'Tumor'].values else 'Normal' if idx in sampleSheetDf.loc[:, 'Normal'].values else 'Undefined' for idx in index]
+	df2 = pd.DataFrame({'type': type}, index=index)
+	df2['group'] = [sampleSheetDf.index[sampleSheetDf['Normal'] == id][0] if not sampleSheetDf.index[sampleSheetDf['Normal'] == id].empty else sampleSheetDf.index[sampleSheetDf['Tumor'] == id][0] for id in df2.axes[0]]
+	df2 = df2.drop(['XXXX', 'ta-164'])
+	return df, df2.loc[:, 'type'], df2.loc[:, 'group']
+
+
 def read_hepmark_paired_tissue():
 	path = r'%s' % getcwd().replace('\\','/')
 	sampleSheet = path + "/Data/Hepmark-Paired-Tissue/SampleSheetPairedSamples-8Mar2017.txt"

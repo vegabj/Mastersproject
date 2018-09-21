@@ -10,9 +10,11 @@ import numpy as np
 # Read df
 import data_reader
 df, target, groups = data_reader.read_hepmark_microarray()
+
 #df, target, groups = data_reader.read_hepmark_paired_tissue()
 '''
 df, target, groups = data_reader.read_hepmark_tissue()
+df, target, groups = data_reader.read_hepmark_tissue_formatted()
 
 df, target, groups = data_reader.read_guihuaSun_PMID_26646696()
 df, target, groups = data_reader.read_publicCRC_GSE46622()
