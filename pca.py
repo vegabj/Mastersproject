@@ -9,12 +9,17 @@ import numpy as np
 
 # Read df
 import data_reader
-df, target, groups = data_reader.read_hepmark_microarray()
 
+
+df, target, groups = data_reader.read_publicCRC_GSE46622_rectum()
 #df, target, groups = data_reader.read_hepmark_paired_tissue()
 '''
+df, target, groups = data_reader.read_hepmark_microarray()
 df, target, groups = data_reader.read_hepmark_tissue()
 df, target, groups = data_reader.read_hepmark_tissue_formatted()
+df, target, groups = data_reader.read_guihuaSun_PMID_26646696_colon()
+df, target, groups = data_reader.read_guihuaSun_PMID_26646696_rectal()
+df, target, groups = data_reader.read_publicCRC_GSE46622_colon()
 
 df, target, groups = data_reader.read_guihuaSun_PMID_26646696()
 df, target, groups = data_reader.read_publicCRC_GSE46622()
@@ -47,13 +52,15 @@ x = np.concatenate((xs), axis=0)
 df_index = df.axes[0]
 
 from sklearn.decomposition import PCA
-pca = PCA(n_components=2)
+pca = PCA(n_components=4)
 principalComponents = pca.fit_transform(x)
 principalDf = pd.DataFrame(data = principalComponents
-             , columns = ['principal component 1', 'principal component 2']
+             , columns = ['principal component 1', 'principal component 2'
+             ,'principal component 3', 'principal component 4']
              , index = df_index)
 
 finalDf = pd.concat([principalDf, df[['target']]], axis = 1)
+print(finalDf)
 
 from matplotlib import pyplot as plt
 
@@ -61,7 +68,7 @@ fig = plt.figure(figsize = (8,8))
 ax = fig.add_subplot(1,1,1)
 ax.set_xlabel('Principal Component 1', fontsize = 15)
 ax.set_ylabel('Principal Component 2', fontsize = 15)
-ax.set_title('2 component PCA Hepmark-Microarray', fontsize = 20)
+ax.set_title('2 component PCA', fontsize = 20)
 targets = set(y)
 colors = ['r', 'g', 'b']
 for target, color in zip(targets,colors):
@@ -75,5 +82,23 @@ ax.grid()
 
 pca.explained_variance_ratio_
 
-print(finalDf)
+
+plt.show()
+
+fig = plt.figure(figsize = (8,8))
+ax = fig.add_subplot(1,1,1)
+ax.set_xlabel('Principal Component 3', fontsize = 15)
+ax.set_ylabel('Principal Component 4', fontsize = 15)
+ax.set_title('2 component PCA', fontsize = 20)
+targets = set(y)
+colors = ['r', 'g', 'b']
+for target, color in zip(targets,colors):
+    indicesToKeep = finalDf['target'] == target
+    ax.scatter(finalDf.loc[indicesToKeep, 'principal component 3']
+               , finalDf.loc[indicesToKeep, 'principal component 4']
+               , c = color
+               , s = 50)
+ax.legend(targets)
+ax.grid()
+
 plt.show()
