@@ -28,8 +28,7 @@ def make_full_density_plot(df):
     for sample in df.axes[1]:
         subset = df.loc[:, [sample]]
         sns.distplot(subset, hist = False, kde = True,
-            kde_kws = {'shade': False, 'linewidth': 3},
-            label = sample)
+            kde_kws = {'shade': False, 'linewidth': 3})
 
     plt.legend(prop={'size': 16}, title = 'Samples')
     plt.title('Density Plot with Multiple Samples')
@@ -48,4 +47,4 @@ def test_make_density_plot():
     #make_density_plot(df)
     make_full_density_plot(df)
 
-test_make_density_plot()
+#test_make_density_plot()

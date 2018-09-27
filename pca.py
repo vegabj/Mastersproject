@@ -10,17 +10,16 @@ import numpy as np
 # Read df
 import data_reader
 
-
-df, target, groups = data_reader.read_publicCRC_GSE46622_rectum()
+df, target, groups = data_reader.read_hepmark_microarray()
 #df, target, groups = data_reader.read_hepmark_paired_tissue()
 '''
-df, target, groups = data_reader.read_hepmark_microarray()
+
 df, target, groups = data_reader.read_hepmark_tissue()
 df, target, groups = data_reader.read_hepmark_tissue_formatted()
 df, target, groups = data_reader.read_guihuaSun_PMID_26646696_colon()
 df, target, groups = data_reader.read_guihuaSun_PMID_26646696_rectal()
 df, target, groups = data_reader.read_publicCRC_GSE46622_colon()
-
+df, target, groups = data_reader.read_publicCRC_GSE46622_rectum()
 df, target, groups = data_reader.read_guihuaSun_PMID_26646696()
 df, target, groups = data_reader.read_publicCRC_GSE46622()
 df, target, groups = data_reader.read_publicCRC_PMID_26436952()
@@ -30,6 +29,7 @@ df, target, groups = data_reader.read_publicCRC_PMID_26436952()
 # Separate features and targets / meta-data
 features = df.axes[1].values
 df['target'] = target
+df = df.dropna(axis=0)
 df['group'] = groups
 
 x = df.loc[:,features].values
@@ -77,8 +77,20 @@ for target, color in zip(targets,colors):
                , finalDf.loc[indicesToKeep, 'principal component 2']
                , c = color
                , s = 50)
+
 ax.legend(targets)
 ax.grid()
+# Label a target
+'''
+indicesToKeep = finalDf.loc['509-1-4']
+print(indicesToKeep)
+ax.scatter(indicesToKeep['principal component 1']
+    , indicesToKeep['principal component 2']
+    , c = 'b'
+    , marker = "x"
+    , s = 100)
+'''
+
 
 pca.explained_variance_ratio_
 
