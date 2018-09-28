@@ -4,7 +4,7 @@ import data_reader
 
 def merge_frames(df1, df2):
     #print(df1)
-    df = pd.concat([df1,df2], axis = 0)
+    df = pd.concat([df1,df2], axis = 0, sort=False)
     #df = df.dropna(axis='columns')
     df = df.fillna(-1)
     #print(df)

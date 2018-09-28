@@ -12,6 +12,7 @@ import data_reader
 
 df, target, groups = data_reader.read_hepmark_microarray()
 #df, target, groups = data_reader.read_hepmark_paired_tissue()
+#df, target, groups = data_reader.read_publicCRC_PMID_26436952()
 '''
 
 df, target, groups = data_reader.read_hepmark_tissue()
@@ -46,8 +47,8 @@ for groupname, group in grouped:
         StandardScaler().fit_transform(
             group.loc[:, features]))
 
-# Combine normalized groups
-x = np.concatenate((xs), axis=0)
+# Combine normalized groups or use one scaler for all data
+x = np.concatenate((xs), axis=0) # StandardScaler().fit_transform(x)
 
 df_index = df.axes[0]
 

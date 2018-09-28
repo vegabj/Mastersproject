@@ -55,6 +55,7 @@ def read_hepmark_tissue_formatted():
 	type = ['Tumor' if idx in sampleSheetDf.loc[:, 'Tumor'].values else 'Normal' if idx in sampleSheetDf.loc[:, 'Normal'].values else 'Undefined' for idx in index]
 	df2 = pd.DataFrame({'type': type}, index=index)
 	df2['group'] = [sampleSheetDf.index[sampleSheetDf['Normal'] == id][0] if not sampleSheetDf.index[sampleSheetDf['Normal'] == id].empty else sampleSheetDf.index[sampleSheetDf['Tumor'] == id][0] for id in df2.axes[0]]
+	df2 = df2.drop(['XXXX', 'ta-164', 'ta157', 'tb140']) # 2 missmatch and 2 extrimities
 	return df, df2.loc[:, 'type'], df2.loc[:, 'group']
 
 
@@ -147,7 +148,6 @@ def read_publicCRC_GSE46622_rectum():
 	df['tissue'] = sampleSheet.loc[:, 'tissue_s']
 	df = df[df.tissue == 'colorectal biopsy, rectum/sigma']
 	df = df.drop(['tissue'], axis=1)
-	# TODO
 	df.dropna()
 	return df, sampleSheet.loc[:, 'disease_state_s'], sampleSheet.loc[:, 'subject_s']
 
@@ -174,7 +174,16 @@ def read_publicCRC_PMID_26436952():
 	raw = path + "raw/SampleSheet.txt"
 	df = pd.read_csv(analyses, sep="\t").transpose()
 	sampleSheet = pd.read_csv(raw, sep="\t", usecols=['anonymized_name', 'tumor_type', 'subject_alias', 'disease_site'], index_col='anonymized_name')
+	print(sampleSheet)
+	sub = sampleSheet[sampleSheet.tumor_type == 'Metastasis']
+	sampleSheet = sampleSheet.drop(sub.index)
+	print(sampleSheet)
+
 	# TODO: disease_site split into types
+	# Liver
+	# Colon
+	# Lung
+	# Rectum
 
 	df.dropna()
 	return df, sampleSheet.loc[:, 'tumor_type'], sampleSheet.loc[:, 'subject_alias']
