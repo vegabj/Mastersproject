@@ -16,8 +16,12 @@ df_training = df.head(training_length)
 df_test = df.tail(test_length)
 
 # Transform labels to real values
+from sklearn.preprocessing import label_binarize
 labels_training = [0 if l == 'Normal' else 1 if l == 'Tumor' else 2 for l in labels_training]
 labels_test = [0 if l == 'Normal' else 1 if l == 'Tumor' else 2 for l in labels_test]
+labels_training = label_binarize(labels_training, classes=[0, 1])
+labels_test = label_binarize(labels_test, classes=[0, 1])
+
 #labels = np.append(labels_training, labels_test)
 
 # Normalize test Increases hits from ~0.5 to 0.7
@@ -28,18 +32,47 @@ df_test = StandardScaler().fit_transform(df_test)
 # Train classifier
 # TODO
 import classifier
-from sklearn.neighbors import KNeighborsClassifier
+#from sklearn.neighbors import KNeighborsClassifier
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn import svm
+random_state = np.random.RandomState(0)
 
-clf = KNeighborsClassifier()
-clf = clf.fit(df_training, labels_training)
+#clf = KNeighborsClassifier()
+clf = OneVsRestClassifier(svm.SVC(kernel='linear', probability=True,
+                            random_state=random_state))
+clf_score = clf.fit(df_training, labels_training).decision_function(df_test)
+
+
+# ROC
+#TODO
+# Compute ROC curve and ROC area for each class
+from sklearn.metrics import roc_curve, auc
+
+#for i in range(n_classes):
+fpr, tpr, _ = roc_curve(labels_test, clf_score)
+roc_auc = auc(fpr, tpr)
+
+# Compute micro-average ROC curve and ROC area
+#fpr["micro"], tpr["micro"], _ = roc_curve(labels_test.ravel(), clf_score.ravel())
+#roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
+
+# plot roc curve
+import matplotlib.pyplot as plt
+plt.figure()
+lw = 2
+plt.plot(fpr, tpr, color='darkorange',
+         lw=lw, label='ROC curve (area = %0.2f)' % roc_auc)
+plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver operating characteristic example')
+plt.legend(loc="lower right")
+plt.show()
 
 
 # Make predictions
-training_hits = 0
-for val, label in zip(df_training, labels_training):
-    if clf.predict([val]) == label:
-        training_hits += 1
-print("Training:", training_hits/len(labels_training))
 
 test_hits = 0
 for val, label in zip(df_test, labels_test):
@@ -47,5 +80,4 @@ for val, label in zip(df_test, labels_test):
         test_hits += 1
 print("Test:", test_hits/len(labels_test))
 
-print(clf.predict(df_test))
-print(labels_test)
+#print(clf.predict(df_test))
