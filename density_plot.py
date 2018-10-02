@@ -41,7 +41,8 @@ def make_full_density_plot(df):
 def test_make_density_plot():
     import data_reader
     #df, target, group = data_reader.read_hepmark_microarray()
-    df, _, _ = data_reader.read_hepmark_tissue_formatted()
+    #df, _, _ = data_reader.read_hepmark_tissue_formatted()
+    df, _, _ = data_reader.read_hepmark_paired_tissue_formatted()
     #df, target, group = data_reader.read_guihuaSun_PMID_26646696()
     df = df.transpose()
     #make_density_plot(df)

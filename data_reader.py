@@ -1,7 +1,7 @@
 '''
 Vegard Bjørgan 2018
 
-reader for raw data files
+reader for data files
 '''
 
 import pandas as pd
@@ -31,12 +31,18 @@ def read_hepmark_tissue():
 	df = pd.read_csv(path, sep="\t").transpose()
 	# Compose sampleSheet metadata
 	# TODO: make code readable
-	sampleSheetDf = pd.read_csv(sampleSheet, sep="\t", usecols=['ID', 'Normal', 'Tumor'], index_col=['ID'])
+	sampleSheetDf = pd.read_csv(sampleSheet, sep="\t",
+					usecols=['ID', 'Normal', 'Tumor'], index_col=['ID'])
 	sampleSheetDf = sampleSheetDf.dropna()
 	index = np.concatenate([sampleSheetDf.loc[:,'Normal'], sampleSheetDf.loc[:,'Tumor']], axis = 0)
-	type = ['Tumor' if idx in sampleSheetDf.loc[:, 'Tumor'].values else 'Normal' if idx in sampleSheetDf.loc[:, 'Normal'].values else 'Undefined' for idx in index]
+	type = ['Tumor' if idx in sampleSheetDf.loc[:, 'Tumor'].values
+			else 'Normal' if idx in sampleSheetDf.loc[:, 'Normal'].values
+			else 'Undefined' for idx in index]
 	df2 = pd.DataFrame({'type': type}, index=index)
-	df2['group'] = [sampleSheetDf.index[sampleSheetDf['Normal'] == id][0] if not sampleSheetDf.index[sampleSheetDf['Normal'] == id].empty else sampleSheetDf.index[sampleSheetDf['Tumor'] == id][0] for id in df2.axes[0]]
+	df2['group'] = [sampleSheetDf.index[sampleSheetDf['Normal'] == id][0]
+					if not sampleSheetDf.index[sampleSheetDf['Normal'] == id].empty
+					else sampleSheetDf.index[sampleSheetDf['Tumor'] == id][0]
+					for id in df2.axes[0]]
 	# TODO: Samplesheet and MatureMatrix missmatch
 	df2 = df2.drop(['XXXX', 'ta-164'])
 	df = df.drop(['na144_2', 'na-164'])
@@ -49,12 +55,18 @@ def read_hepmark_tissue_formatted():
 	sampleSheet = path + "/Data/Hepmark-Tissue/SampleNamesHEP-28Mar2017.txt"
 	path = path + "/Data/Hepmark-Tissue/MatureMatrixFormatted.csv"
 	df = pd.read_csv(path, index_col=0).transpose()
-	sampleSheetDf = pd.read_csv(sampleSheet, sep="\t", usecols=['ID', 'Normal', 'Tumor'], index_col=['ID'])
+	sampleSheetDf = pd.read_csv(sampleSheet, sep="\t",
+						usecols=['ID', 'Normal', 'Tumor'], index_col=['ID'])
 	sampleSheetDf = sampleSheetDf.dropna()
 	index = np.concatenate([sampleSheetDf.loc[:,'Normal'], sampleSheetDf.loc[:,'Tumor']], axis = 0)
-	type = ['Tumor' if idx in sampleSheetDf.loc[:, 'Tumor'].values else 'Normal' if idx in sampleSheetDf.loc[:, 'Normal'].values else 'Undefined' for idx in index]
+	type = ['Tumor' if idx in sampleSheetDf.loc[:, 'Tumor'].values
+			else 'Normal' if idx in sampleSheetDf.loc[:, 'Normal'].values
+			else 'Undefined' for idx in index]
 	df2 = pd.DataFrame({'type': type}, index=index)
-	df2['group'] = [sampleSheetDf.index[sampleSheetDf['Normal'] == id][0] if not sampleSheetDf.index[sampleSheetDf['Normal'] == id].empty else sampleSheetDf.index[sampleSheetDf['Tumor'] == id][0] for id in df2.axes[0]]
+	df2['group'] = [sampleSheetDf.index[sampleSheetDf['Normal'] == id][0]
+					if not sampleSheetDf.index[sampleSheetDf['Normal'] == id].empty
+					else sampleSheetDf.index[sampleSheetDf['Tumor'] == id][0]
+					for id in df2.axes[0]]
 	df2 = df2.drop(['XXXX', 'ta-164', 'ta157', 'tb140']) # 2 missmatch and 2 extrimities
 	return df, df2.loc[:, 'type'], df2.loc[:, 'group']
 
@@ -69,8 +81,27 @@ def read_hepmark_paired_tissue():
 	normals = sampleSheetDf['Normal'][~pd.isnull(sampleSheetDf['Normal'])]
 	tumors = sampleSheetDf['Tumor'][~pd.isnull(sampleSheetDf['Tumor'])]
 	sampleSheetDf = sampleSheetDf.dropna(axis=1)
-	sampleSheetDf['Type'] = ['Normal' if ax in normals else 'Tumor' if ax in tumors else np.nan for ax in sampleSheetDf.index]
+	sampleSheetDf['Type'] = ['Normal' if ax in normals else 'Tumor'
+							if ax in tumors else np.nan for ax in sampleSheetDf.index]
 	sampleSheetDf = sampleSheetDf.dropna(axis=0)
+	return df, sampleSheetDf.loc[:,'Type'], sampleSheetDf.loc[:, 'Code']
+
+def read_hepmark_paired_tissue_formatted():
+	path = r'%s' % getcwd().replace('\\','/')
+	sampleSheet = path + "/Data/Hepmark-Paired-Tissue/SampleSheetPairedSamples-8Mar2017.txt"
+	path = path + "/Data/Hepmark-Paired-Tissue/MatureMatrixFormatted.csv"
+	df = pd.read_csv(path, index_col = 0).transpose()
+	sampleSheetDf = pd.read_csv(sampleSheet, sep="\t", usecols=['ID', 'Normal', 'Tumor', 'Code'], index_col='ID')
+	# Setup types
+	normals = sampleSheetDf['Normal'][~pd.isnull(sampleSheetDf['Normal'])]
+	tumors = sampleSheetDf['Tumor'][~pd.isnull(sampleSheetDf['Tumor'])]
+	sampleSheetDf = sampleSheetDf.dropna(axis=1)
+	sampleSheetDf['Type'] = ['Normal' if ax in normals else 'Tumor'
+				if ax in tumors else np.nan for ax in sampleSheetDf.index]
+	sampleSheetDf = sampleSheetDf.dropna(axis=0)
+	df['Type'] = sampleSheetDf.loc[:, 'Type']
+	df = df.dropna()
+	df = df.drop('Type', axis = 1)
 	return df, sampleSheetDf.loc[:,'Type'], sampleSheetDf.loc[:, 'Code']
 
 

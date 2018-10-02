@@ -10,24 +10,31 @@ training_length = df_training.values.shape[0]
 df_test, labels_test, groups_test = data_reader.read_hepmark_tissue_formatted()
 test_length = df_test.values.shape[0]
 
+# Import validation data
+df_validation, labels_validation, groups_validation = data_reader.read_hepmark_paired_tissue_formatted()
+validation_length = df_validation.values.shape[0]
+
 # Make dfs comparable
-df = df_utils.merge_frames(df_training, df_test)
+df = df_utils.merge_frames([df_training, df_test, df_validation])
 df_training = df.head(training_length)
-df_test = df.tail(test_length)
+df_test = df.tail(test_length+validation_length).head(test_length)
+df_validation = df.tail(validation_length)
 
 # Transform labels to real values
 from sklearn.preprocessing import label_binarize
 labels_training = [0 if l == 'Normal' else 1 if l == 'Tumor' else 2 for l in labels_training]
 labels_test = [0 if l == 'Normal' else 1 if l == 'Tumor' else 2 for l in labels_test]
+labels_validation = [0 if l == 'Normal' else 1 if l == 'Tumor' else 2 for l in labels_validation]
 labels_training = label_binarize(labels_training, classes=[0, 1])
 labels_test = label_binarize(labels_test, classes=[0, 1])
+labels_validation = label_binarize(labels_validation, classes=[0, 1])
 
-#labels = np.append(labels_training, labels_test)
 
 # Normalize test Increases hits from ~0.5 to 0.7
 from sklearn.preprocessing import StandardScaler
 df_training = StandardScaler().fit_transform(df_training)
 df_test = StandardScaler().fit_transform(df_test)
+df_validation = StandardScaler().fit_transform(df_validation)
 
 # Train classifier
 # TODO
@@ -80,4 +87,8 @@ for val, label in zip(df_test, labels_test):
         test_hits += 1
 print("Test:", test_hits/len(labels_test))
 
-#print(clf.predict(df_test))
+val_hits = 0
+for val, label in zip(df_validation, labels_validation):
+    if clf.predict([val]) == label:
+        val_hits += 1
+print("Validation:", val_hits/len(labels_validation))

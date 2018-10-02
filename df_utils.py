@@ -2,9 +2,9 @@ import pandas as pd
 import numpy as np
 import data_reader
 
-def merge_frames(df1, df2):
+def merge_frames(dfs):
     #print(df1)
-    df = pd.concat([df1,df2], axis = 0, sort=False)
+    df = pd.concat(dfs, axis = 0, sort=False)
     #df = df.dropna(axis='columns')
     df = df.fillna(-1)
     #print(df)

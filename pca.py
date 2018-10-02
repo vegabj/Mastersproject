@@ -12,6 +12,7 @@ import data_reader
 
 df, target, groups = data_reader.read_hepmark_microarray()
 #df, target, groups = data_reader.read_hepmark_paired_tissue()
+df, target, groups = data_reader.read_hepmark_paired_tissue_formatted()
 #df, target, groups = data_reader.read_publicCRC_PMID_26436952()
 '''
 
