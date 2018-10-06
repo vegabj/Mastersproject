@@ -63,7 +63,7 @@ roc_auc = auc(fpr, tpr)
 #fpr["micro"], tpr["micro"], _ = roc_curve(labels_test.ravel(), clf_score.ravel())
 #roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
 
-# plot roc curve
+# plot roc curve for test
 import matplotlib.pyplot as plt
 plt.figure()
 lw = 2
@@ -80,7 +80,6 @@ plt.show()
 
 
 # Make predictions
-
 test_hits = 0
 for val, label in zip(df_test, labels_test):
     if clf.predict([val]) == label:
@@ -91,4 +90,22 @@ val_hits = 0
 for val, label in zip(df_validation, labels_validation):
     if clf.predict([val]) == label:
         val_hits += 1
-print("Validation:", val_hits/len(labels_validation))
+print("Validation:", val_hits/len(labels_validation), "Hits:", val_hits, "of", len(labels_validation))
+
+# Validation ROC
+clf_score = clf.predict(df_validation)
+fpr, tpr, _ = roc_curve(labels_validation, clf_score)
+roc_auc = auc(fpr, tpr)
+
+plt.figure()
+lw = 2
+plt.plot(fpr, tpr, color='darkorange',
+         lw=lw, label='ROC curve (area = %0.2f)' % roc_auc)
+plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver operating characteristic example')
+plt.legend(loc="lower right")
+plt.show()

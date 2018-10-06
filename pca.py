@@ -6,50 +6,58 @@ pca.py creates a 2-n dimentional principal component analysis of the data
 
 import pandas as pd
 import numpy as np
+import df_utils
+
+# TODO: UI
+# num principal components
+#
 
 # Read df
 import data_reader
+names = data_reader.get_sets()
 
-df, target, groups = data_reader.read_hepmark_microarray()
-#df, target, groups = data_reader.read_hepmark_paired_tissue()
-df, target, groups = data_reader.read_hepmark_paired_tissue_formatted()
-#df, target, groups = data_reader.read_publicCRC_PMID_26436952()
-'''
+print("Available data sets are:")
+for i,e in enumerate(names):
+    print(str(i)+":", e)
+selected = input("Select data set (multiselect separate with ' '): ")
+selected = selected.split(' ')
 
-df, target, groups = data_reader.read_hepmark_tissue()
-df, target, groups = data_reader.read_hepmark_tissue_formatted()
-df, target, groups = data_reader.read_guihuaSun_PMID_26646696_colon()
-df, target, groups = data_reader.read_guihuaSun_PMID_26646696_rectal()
-df, target, groups = data_reader.read_publicCRC_GSE46622_colon()
-df, target, groups = data_reader.read_publicCRC_GSE46622_rectum()
-df, target, groups = data_reader.read_guihuaSun_PMID_26646696()
-df, target, groups = data_reader.read_publicCRC_GSE46622()
-df, target, groups = data_reader.read_publicCRC_PMID_26436952()
-'''
+multi_select = False if len(selected) == 1 else True
+if multi_select:
+    dfs = []
+    targets = []
+    groups = []
+    for select in selected:
+        df, tar, grp = data_reader.read_number(int(select))
+        dfs.append(df)
+        targets.append(tar)
+        groups.append(grp)
 
+    df = df_utils.merge_frames(dfs)
+    target = targets[0]
+    group = groups[0]
+    for tar, gro in zip(targets[1:], groups[1:]):
+        target = np.append(target, tar)
+        group = np.append(group, gro)
+    lengths = [d.values.shape[0] for d in dfs]
+else:
+    df, target, group = data_reader.read_number(int(selected[0]))
+    lengths = []
 
 # Separate features and targets / meta-data
 features = df.axes[1].values
 df['target'] = target
-df = df.dropna(axis=0)
-df['group'] = groups
+df['group'] = group
 
 x = df.loc[:,features].values
 y = df.loc[:,'target'].values
 
-
-# Apply normalization to each group
-from sklearn.preprocessing import StandardScaler
-xs = []
-grouped = df.groupby('group')
-
-for groupname, group in grouped:
-    xs.append(
-        StandardScaler().fit_transform(
-            group.loc[:, features]))
-
-# Combine normalized groups or use one scaler for all data
-x = np.concatenate((xs), axis=0) # StandardScaler().fit_transform(x)
+# Apply normalization
+from scaler import MiRNAScaler
+#x = MiRNAScaler.standard_scaler(x)
+#x = MiRNAScaler.group_scaler(df, features)
+x = MiRNAScaler.miRNA_scaler(x)
+#x = MiRNAScaler.set_scaler(df, lengths, features)
 
 df_index = df.axes[0]
 
@@ -62,57 +70,11 @@ principalDf = pd.DataFrame(data = principalComponents
              , index = df_index)
 
 finalDf = pd.concat([principalDf, df[['target']]], axis = 1)
-print(finalDf)
 
-from matplotlib import pyplot as plt
+#print(finalDf)
 
-fig = plt.figure(figsize = (8,8))
-ax = fig.add_subplot(1,1,1)
-ax.set_xlabel('Principal Component 1', fontsize = 15)
-ax.set_ylabel('Principal Component 2', fontsize = 15)
-ax.set_title('2 component PCA', fontsize = 20)
-targets = set(y)
-colors = ['r', 'g', 'b']
-for target, color in zip(targets,colors):
-    indicesToKeep = finalDf['target'] == target
-    ax.scatter(finalDf.loc[indicesToKeep, 'principal component 1']
-               , finalDf.loc[indicesToKeep, 'principal component 2']
-               , c = color
-               , s = 50)
+print(pca.explained_variance_ratio_)
 
-ax.legend(targets)
-ax.grid()
-# Label a target
-'''
-indicesToKeep = finalDf.loc['509-1-4']
-print(indicesToKeep)
-ax.scatter(indicesToKeep['principal component 1']
-    , indicesToKeep['principal component 2']
-    , c = 'b'
-    , marker = "x"
-    , s = 100)
-'''
-
-
-pca.explained_variance_ratio_
-
-
-plt.show()
-
-fig = plt.figure(figsize = (8,8))
-ax = fig.add_subplot(1,1,1)
-ax.set_xlabel('Principal Component 3', fontsize = 15)
-ax.set_ylabel('Principal Component 4', fontsize = 15)
-ax.set_title('2 component PCA', fontsize = 20)
-targets = set(y)
-colors = ['r', 'g', 'b']
-for target, color in zip(targets,colors):
-    indicesToKeep = finalDf['target'] == target
-    ax.scatter(finalDf.loc[indicesToKeep, 'principal component 3']
-               , finalDf.loc[indicesToKeep, 'principal component 4']
-               , c = color
-               , s = 50)
-ax.legend(targets)
-ax.grid()
-
-plt.show()
+# Plot the principal components
+import interactive_scatterplot as scatter
+scatter.pca_scatter(finalDf, multi_select, lengths)

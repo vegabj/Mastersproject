@@ -1,0 +1,51 @@
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+import numpy as np
+
+
+class MiRNAScaler():
+
+    def __init__():
+        pass
+
+    def miRNA_scaler(x):
+        return MinMaxScaler().fit_transform(x)
+
+    def standard_scaler(x):
+        return StandardScaler().fit_transform(x)
+
+    def group_scaler(df, features):
+        xs = []
+        grouped = df.groupby('group')
+
+        for groupname, group in grouped:
+            xs.append(
+                StandardScaler().fit_transform(
+                    group.loc[:, features]))
+
+        return np.concatenate((xs), axis=0)
+
+    def set_scaler(df, lengths, features):
+        dfs = []
+        dfs.append(df.head(lengths[0]))
+        current = lengths[0]
+        for i in range(1, len(lengths)):
+            dfs.append(df.tail(len(df)-current).head(lengths[i]))
+            current += lengths[i]
+        dfs = [StandardScaler().fit_transform(d.loc[:, features]) for d in dfs]
+        return np.concatenate((dfs), axis=0)
+
+
+# TEST
+'''
+d = {}
+d['A'] = [1000, 765, 800]
+d['B'] = [10, 5, 7]
+d['C'] = [0.5, 0.35, 0.09]
+import pandas as pd
+
+df = pd.DataFrame(d)
+print(df)
+d = MiRNAScaler.miRNA_scaler(df.values)
+d = pd.DataFrame(d, columns=df.columns)
+print(d)
+'''

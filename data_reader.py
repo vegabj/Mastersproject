@@ -9,6 +9,13 @@ import numpy as np
 from os import getcwd
 import re
 
+
+def get_sets():
+	return ["Hepmark_Microarray", "Hepmark_Tissue", "Hepmark_Paired_Tissue",
+			"Coloncancer_GCF_2014_295", "GuihuaSun_PMID_26646696_colon",
+			"GuihuaSun_PMID_26646696_rectal", "PublicCRC_GSE46622_colon",
+			"PublicCRC_GSE46622_rectal", "PublicCRC_PMID_26436952"]
+
 '''
 Hepmark
 '''
@@ -30,7 +37,6 @@ def read_hepmark_tissue():
 	path = path + "/Data/Hepmark-Tissue/MatureMatrix.csv"
 	df = pd.read_csv(path, sep="\t").transpose()
 	# Compose sampleSheet metadata
-	# TODO: make code readable
 	sampleSheetDf = pd.read_csv(sampleSheet, sep="\t",
 					usecols=['ID', 'Normal', 'Tumor'], index_col=['ID'])
 	sampleSheetDf = sampleSheetDf.dropna()
@@ -86,6 +92,7 @@ def read_hepmark_paired_tissue():
 	sampleSheetDf = sampleSheetDf.dropna(axis=0)
 	return df, sampleSheetDf.loc[:,'Type'], sampleSheetDf.loc[:, 'Code']
 
+
 def read_hepmark_paired_tissue_formatted():
 	path = r'%s' % getcwd().replace('\\','/')
 	sampleSheet = path + "/Data/Hepmark-Paired-Tissue/SampleSheetPairedSamples-8Mar2017.txt"
@@ -104,12 +111,32 @@ def read_hepmark_paired_tissue_formatted():
 	df = df.drop('Type', axis = 1)
 	return df, sampleSheetDf.loc[:,'Type'], sampleSheetDf.loc[:, 'Code']
 
-
 '''
 ColonCancer
 '''
+
 def read_coloncancer_GCF_2014_295():
-	print("SampleSheet missing")
+	path = r'%s' % getcwd().replace('\\','/')
+	path = path + "/Data/ColonCancer/ColonCancer_GCF-2014-295/"
+	analyses = path + "analyses/MatureMatrix.csv"
+	df = pd.read_csv(analyses, sep="\t").transpose()
+	df = df.drop(['Sample_240R', 'Sample_240G', 'Sample_335R', 'Sample_335G'])
+	target = ['Normal' if ax[-1] == 'R' else 'Tumor' if ax[-1] else 'Undefined' for ax in df.axes[0]]
+	group = [ax[:-1] for ax in df.axes[0]]
+	# TODO: Determine if R is regular og G is regular
+	return df, target, group
+
+
+def read_coloncancer_GCF_2014_295_formatted():
+	path = r'%s' % getcwd().replace('\\','/')
+	path = path + "/Data/ColonCancer/ColonCancer_GCF-2014-295/"
+	analyses = path + "analyses/MatureMatrixFormatted.csv"
+	df = pd.read_csv(analyses, index_col = 0).transpose()
+	target = ['Normal' if ax[-1] == 'R' else 'Tumor' if ax[-1] else 'Undefined' for ax in df.axes[0]]
+	group = [ax[:-1] for ax in df.axes[0]]
+	# TODO: Determine if R is regular og G is regular
+	return df, target, group
+
 
 def read_guihuaSun_PMID_26646696_colon():
 	path = r'%s' % getcwd().replace('\\','/')
@@ -127,6 +154,7 @@ def read_guihuaSun_PMID_26646696_colon():
 	df.dropna()
 	return df, sampleSheet.loc[:, 'Diease'], sampleSheet.loc[:, 'group']
 
+
 def read_guihuaSun_PMID_26646696_rectal():
 	path = r'%s' % getcwd().replace('\\','/')
 	path = path + "/Data/ColonCancer/GuihuaSun-PMID_26646696/"
@@ -142,6 +170,7 @@ def read_guihuaSun_PMID_26646696_rectal():
 
 	df.dropna()
 	return df, sampleSheet.loc[:, 'Diease'], sampleSheet.loc[:, 'group']
+
 
 def read_publicCRC_GSE46622_colon():
 	path = r'%s' % getcwd().replace('\\','/')
@@ -163,7 +192,8 @@ def read_publicCRC_GSE46622_colon():
 	df.dropna()
 	return df, sampleSheet.loc[:, 'disease_state_s'], sampleSheet.loc[:, 'subject_s']
 
-def read_publicCRC_GSE46622_rectum():
+
+def read_publicCRC_GSE46622_rectal():
 	path = r'%s' % getcwd().replace('\\','/')
 	path = path + "/Data/ColonCancer/PublicCRC_GSE46622/"
 	analyses = path + "analyses/MatureMatrix.csv"
@@ -182,6 +212,7 @@ def read_publicCRC_GSE46622_rectum():
 	df.dropna()
 	return df, sampleSheet.loc[:, 'disease_state_s'], sampleSheet.loc[:, 'subject_s']
 
+
 def read_publicCRC_PMID_23824282():
 	'''
 	path = r'%s' % getcwd().replace('\\','/')
@@ -197,6 +228,7 @@ def read_publicCRC_PMID_23824282():
 	df.dropna()
 	'''
 	print("Missing target variable (whole set of same type with no normal tissue to compare)")
+
 
 def read_publicCRC_PMID_26436952():
 	path = r'%s' % getcwd().replace('\\','/')
@@ -218,3 +250,24 @@ def read_publicCRC_PMID_26436952():
 
 	df.dropna()
 	return df, sampleSheet.loc[:, 'tumor_type'], sampleSheet.loc[:, 'subject_alias']
+
+
+def read_number(i):
+	if i == 0:
+		return read_hepmark_microarray()
+	elif i == 1:
+		return read_hepmark_tissue_formatted()
+	elif i == 2:
+		return read_hepmark_paired_tissue_formatted()
+	elif i == 3:
+		return read_coloncancer_GCF_2014_295_formatted()
+	elif i == 4:
+		return read_guihuaSun_PMID_26646696_colon()
+	elif i == 5:
+		return read_guihuaSun_PMID_26646696_rectal()
+	elif i == 6:
+		return read_publicCRC_GSE46622_colon()
+	elif i == 7:
+		return read_publicCRC_GSE46622_rectal()
+	elif i == 8:
+		return read_publicCRC_PMID_26436952()
