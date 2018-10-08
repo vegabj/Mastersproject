@@ -42,10 +42,21 @@ def test_make_density_plot():
     import data_reader
     #df, target, group = data_reader.read_hepmark_microarray()
     #df, _, _ = data_reader.read_hepmark_tissue_formatted()
-    df, _, _ = data_reader.read_hepmark_paired_tissue_formatted()
-    #df, target, group = data_reader.read_guihuaSun_PMID_26646696()
+    #df, _, _ = data_reader.read_hepmark_paired_tissue_formatted()
+    df1, _, _ = data_reader.read_coloncancer_GCF_2014_295()
+    df2, _, _ = data_reader.read_guihuaSun_PMID_26646696_colon()
+    df3, _, _ = data_reader.read_publicCRC_GSE46622_colon()
+    import pca_utils
+    dfs = []
+    for df in [df1, df2, df3]:
+        keep_columns = [ax for ax in df.axes[1] if not df[ax].mean() > 50]
+        df = df.loc[:, keep_columns]
+        df = pca_utils.transform_sequence_to_microarray(df)
+        dfs.append(df.transpose())
+    import df_utils
+    df = df_utils.merge_frames(dfs)
     df = df.transpose()
     #make_density_plot(df)
     make_full_density_plot(df)
 
-#test_make_density_plot()
+test_make_density_plot()

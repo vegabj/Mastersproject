@@ -15,7 +15,6 @@ import df_utils
 # Read df
 import data_reader
 names = data_reader.get_sets()
-
 print("Available data sets are:")
 for i,e in enumerate(names):
     print(str(i)+":", e)
@@ -44,8 +43,10 @@ else:
     df, target, group = data_reader.read_number(int(selected[0]))
     lengths = []
 
+
 # Separate features and targets / meta-data
 features = df.axes[1].values
+print(len(df), len(target))
 df['target'] = target
 df['group'] = group
 
@@ -54,9 +55,9 @@ y = df.loc[:,'target'].values
 
 # Apply normalization
 from scaler import MiRNAScaler
-#x = MiRNAScaler.standard_scaler(x)
+x = MiRNAScaler.standard_scaler(x)
 #x = MiRNAScaler.group_scaler(df, features)
-x = MiRNAScaler.miRNA_scaler(x)
+#x = MiRNAScaler.miRNA_scaler(x)
 #x = MiRNAScaler.set_scaler(df, lengths, features)
 
 df_index = df.axes[0]
@@ -73,7 +74,7 @@ finalDf = pd.concat([principalDf, df[['target']]], axis = 1)
 
 #print(finalDf)
 
-print(pca.explained_variance_ratio_)
+print("PCA variance ratio:", pca.explained_variance_ratio_)
 
 # Plot the principal components
 import interactive_scatterplot as scatter

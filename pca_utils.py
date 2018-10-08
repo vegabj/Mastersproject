@@ -19,6 +19,9 @@ def transform_sequence_to_microarray(df):
 
     return df
 
+
+# Tests
+
 def transform_sequence_to_microarray_test_hepmark_paired_tissue():
     df, _, _ = data_reader.read_hepmark_paired_tissue()
     # Remove not significant columns
@@ -41,12 +44,31 @@ def transform_sequence_to_microarray_test_hepmark_tissue():
 
 def transform_sequence_to_microarray_test_coloncancer_GCF_2014_295():
     df, _, _ = data_reader.read_coloncancer_GCF_2014_295()
-    keep_columns = [ax for ax in df.axes[1] if df[ax].mean() > 50]
+    # Keep all miRNA that has a significant value
+    keep_columns = [ax for ax in df.axes[1] if not df[ax].mean() > 50]
     df = df.loc[:, keep_columns]
     df = transform_sequence_to_microarray(df)
     path = r'%s' % getcwd().replace('\\','/') + "/Data/ColonCancer/ColonCancer_GCF-2014-295/analyses/MatureMatrixFormatted.csv"
     df.to_csv(path)
 
+def transform_sequence_to_microarray_test_guihuasun():
+    df, _, _ = data_reader.read_guihuaSun_PMID_26646696_colon()
+    # Keep all miRNA that has a significant value
+    keep_columns = [ax for ax in df.axes[1] if not df[ax].mean() > 50]
+    df = df.loc[:, keep_columns]
+    df = transform_sequence_to_microarray(df)
+    path = r'%s' % getcwd().replace('\\','/') + "/Data/Formatted/guihuaSun.csv"
+    df.to_csv(path)
+
+def transform_sequence_to_microarray_test_guihuasun_r():
+    df, _, _ = data_reader.read_guihuaSun_PMID_26646696_rectal()
+    # Keep all miRNA that has a significant value
+    keep_columns = [ax for ax in df.axes[1] if not df[ax].mean() > 50]
+    df = df.loc[:, keep_columns]
+    df = transform_sequence_to_microarray(df)
+    path = r'%s' % getcwd().replace('\\','/') + "/Data/Formatted/guihuaSun_r.csv"
+    df.to_csv(path)
 
 #transform_sequence_to_microarray_test_hepmark_tissue()
 #transform_sequence_to_microarray_test_coloncancer_GCF_2014_295()
+#transform_sequence_to_microarray_test_guihuasun_r()

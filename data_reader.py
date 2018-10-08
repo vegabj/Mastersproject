@@ -150,9 +150,15 @@ def read_guihuaSun_PMID_26646696_colon():
 	df['tissue'] = sampleSheet.loc[:, 'Tissue']
 	df = df[df.tissue != 'Rectal']
 	df = df.drop(['tissue'], axis=1)
+	sampleSheet = sampleSheet[sampleSheet.Tissue != 'Rectal']
+	sampleSheet = sampleSheet.drop(['Tissue'], axis=1)
 
 	df.dropna()
 	return df, sampleSheet.loc[:, 'Diease'], sampleSheet.loc[:, 'group']
+
+# TODO  Q1
+def read_guihuaSun_PMID_26646696_colon_formatted():
+	pass
 
 
 def read_guihuaSun_PMID_26646696_rectal():
@@ -167,6 +173,8 @@ def read_guihuaSun_PMID_26646696_rectal():
 	df['tissue'] = sampleSheet.loc[:, 'Tissue']
 	df = df[df.tissue != 'Colon']
 	df = df.drop(['tissue'], axis=1)
+	sampleSheet = sampleSheet[sampleSheet.Tissue != 'Colon']
+	sampleSheet = sampleSheet.drop(['Tissue'], axis=1)
 
 	df.dropna()
 	return df, sampleSheet.loc[:, 'Diease'], sampleSheet.loc[:, 'group']
@@ -188,6 +196,10 @@ def read_publicCRC_GSE46622_colon():
 	df['tissue'] = sampleSheet.loc[:, 'tissue_s']
 	df = df[df.tissue != 'colorectal biopsy, rectum/sigma']
 	df = df.drop(['tissue'], axis=1)
+	sampleSheet = sampleSheet[sampleSheet.tissue_s != 'colorectal biopsy, rectum/sigma']
+	sampleSheet = sampleSheet.drop(['tissue_s'], axis=1)
+	sampleSheet['disease_state_s'] = ['Normal' if s == 'benign' else 'Tumor' if s == 'tumor' else 'error' for s in sampleSheet.loc[:, 'disease_state_s']]
+	sampleSheet = sampleSheet.ix[df.index]
 
 	df.dropna()
 	return df, sampleSheet.loc[:, 'disease_state_s'], sampleSheet.loc[:, 'subject_s']
@@ -209,6 +221,10 @@ def read_publicCRC_GSE46622_rectal():
 	df['tissue'] = sampleSheet.loc[:, 'tissue_s']
 	df = df[df.tissue == 'colorectal biopsy, rectum/sigma']
 	df = df.drop(['tissue'], axis=1)
+	sampleSheet['disease_state_s'] = ['Normal' if s == 'benign' else 'Tumor' if s == 'tumor' else 'error' for s in sampleSheet.loc[:, 'disease_state_s']]
+	sampleSheet = sampleSheet.ix[df.index]
+	#TODO: only 2 samples
+
 	df.dropna()
 	return df, sampleSheet.loc[:, 'disease_state_s'], sampleSheet.loc[:, 'subject_s']
 
@@ -242,11 +258,12 @@ def read_publicCRC_PMID_26436952():
 	sampleSheet = sampleSheet.drop(sub.index)
 	print(sampleSheet)
 
-	# TODO: disease_site split into types
+	# TODO: remove
 	# Liver
-	# Colon
+	# ovarian
 	# Lung
 	# Rectum
+	# TODO: has "Primary Tumor instead of Tumor"
 
 	df.dropna()
 	return df, sampleSheet.loc[:, 'tumor_type'], sampleSheet.loc[:, 'subject_alias']
@@ -260,7 +277,7 @@ def read_number(i):
 	elif i == 2:
 		return read_hepmark_paired_tissue_formatted()
 	elif i == 3:
-		return read_coloncancer_GCF_2014_295_formatted()
+		return read_coloncancer_GCF_2014_295()
 	elif i == 4:
 		return read_guihuaSun_PMID_26646696_colon()
 	elif i == 5:

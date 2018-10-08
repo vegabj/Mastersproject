@@ -33,19 +33,3 @@ class MiRNAScaler():
             current += lengths[i]
         dfs = [StandardScaler().fit_transform(d.loc[:, features]) for d in dfs]
         return np.concatenate((dfs), axis=0)
-
-
-# TEST
-'''
-d = {}
-d['A'] = [1000, 765, 800]
-d['B'] = [10, 5, 7]
-d['C'] = [0.5, 0.35, 0.09]
-import pandas as pd
-
-df = pd.DataFrame(d)
-print(df)
-d = MiRNAScaler.miRNA_scaler(df.values)
-d = pd.DataFrame(d, columns=df.columns)
-print(d)
-'''

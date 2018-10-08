@@ -40,43 +40,53 @@ df_validation = StandardScaler().fit_transform(df_validation)
 # TODO
 import classifier
 #from sklearn.neighbors import KNeighborsClassifier
-from sklearn.multiclass import OneVsRestClassifier
-from sklearn import svm
+#from sklearn.multiclass import OneVsRestClassifier
+from sklearn.ensemble import RandomForestClassifier
+#from sklearn import svm
 random_state = np.random.RandomState(0)
 
 #clf = KNeighborsClassifier()
-clf = OneVsRestClassifier(svm.SVC(kernel='linear', probability=True,
-                            random_state=random_state))
-clf_score = clf.fit(df_training, labels_training).decision_function(df_test)
-
+#clf = OneVsRestClassifier(svm.SVC(kernel='linear', probability=True,
+#                            random_state=random_state))
+#clf_score = clf.fit(df_training, labels_training).decision_function(df_test)
+clf = RandomForestClassifier(n_estimators = 100)
+clf = clf.fit(df_training, labels_training.ravel()) # Ravel makes y to 1d array
 
 # ROC
 #TODO
+clf_score = clf.predict(df_test)
+print(clf_score)
+print(labels_test.ravel())
+
 # Compute ROC curve and ROC area for each class
 from sklearn.metrics import roc_curve, auc
 
-#for i in range(n_classes):
 fpr, tpr, _ = roc_curve(labels_test, clf_score)
+#print(len(clf_score))
 roc_auc = auc(fpr, tpr)
 
 # Compute micro-average ROC curve and ROC area
 #fpr["micro"], tpr["micro"], _ = roc_curve(labels_test.ravel(), clf_score.ravel())
 #roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
 
+
 # plot roc curve for test
+print(fpr)
+print(tpr)
 import matplotlib.pyplot as plt
 plt.figure()
-lw = 2
+line_width = 2
 plt.plot(fpr, tpr, color='darkorange',
-         lw=lw, label='ROC curve (area = %0.2f)' % roc_auc)
-plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+         lw=line_width, label='ROC curve (area = %0.2f)' % roc_auc)
+plt.plot([0, 1], [0, 1], color='navy', lw=line_width, linestyle='--')
 plt.xlim([0.0, 1.0])
 plt.ylim([0.0, 1.05])
 plt.xlabel('False Positive Rate')
 plt.ylabel('True Positive Rate')
-plt.title('Receiver operating characteristic example')
+plt.title('Receiver Operating Characteristic (ROC)')
 plt.legend(loc="lower right")
 plt.show()
+
 
 
 # Make predictions
@@ -92,20 +102,24 @@ for val, label in zip(df_validation, labels_validation):
         val_hits += 1
 print("Validation:", val_hits/len(labels_validation), "Hits:", val_hits, "of", len(labels_validation))
 
+'''
 # Validation ROC
 clf_score = clf.predict(df_validation)
 fpr, tpr, _ = roc_curve(labels_validation, clf_score)
 roc_auc = auc(fpr, tpr)
 
+print(labels_validation, clf_score)
+print(fpr)
+print(tpr)
 plt.figure()
-lw = 2
 plt.plot(fpr, tpr, color='darkorange',
-         lw=lw, label='ROC curve (area = %0.2f)' % roc_auc)
-plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+         lw=line_width, label='ROC curve (area = %0.2f)' % roc_auc)
+plt.plot([0, 1], [0, 1], color='navy', lw=line_width, linestyle='--')
 plt.xlim([0.0, 1.0])
 plt.ylim([0.0, 1.05])
 plt.xlabel('False Positive Rate')
 plt.ylabel('True Positive Rate')
-plt.title('Receiver operating characteristic example')
+plt.title('Receiver Operating Characteristic (ROC)')
 plt.legend(loc="lower right")
 plt.show()
+'''

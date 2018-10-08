@@ -17,7 +17,7 @@ def pca_scatter(finalDf, multi_select, lengths):
 
     # Use different markers if several datasets are used
     if multi_select:
-        markers = ['o', 'v', 'd', '^', 'D'] # look into changing these
+        markers = ['v', '^', 'o', 's', 'D'] # TODO: Error here where markers become hybrids
         legend_elements = [Line2D([0], [0], marker ='o', color='w', label = 'Normal'
                             , markerfacecolor='r', markersize=10)
                         , Line2D([0], [0], marker ='o', color='w', label = 'Tumor'
@@ -26,7 +26,7 @@ def pca_scatter(finalDf, multi_select, lengths):
         for i in range(len(lengths)):
             currentRow = 0
             currentDf = finalDf.tail(len(finalDf)-currentRow).head(lengths[i])
-            color = ['g' if tar == 'Tumor' else 'r' for tar in currentDf.target.values]
+            color = ['g' if tar == 'Tumor' else 'r' if tar == 'Normal' else 'b' for tar in currentDf.target.values]
             ax.scatter(currentDf['principal component 1'].values
                        , currentDf['principal component 2'].values
                        , c = color
@@ -38,7 +38,7 @@ def pca_scatter(finalDf, multi_select, lengths):
                                     , markersize=10))
 
     else:
-        color = ['g' if tar == 'Tumor' else 'r' for tar in finalDf.target.values]
+        color = ['g' if tar == 'Tumor' else 'r' if tar == 'Normal' else 'b' for tar in finalDf.target.values]
         ax.scatter(finalDf['principal component 1'].values
                    , finalDf['principal component 2'].values
                    , c = color
