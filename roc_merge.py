@@ -25,7 +25,7 @@ y = np.array([0 if l == 'Normal' else 1 if l == 'Tumor' else 2 for l in y])
 #NOTE: label 2 should not be in any label
 
 cv = StratifiedKFold(n_splits=10)
-classifier = RandomForestClassifier(n_estimators = 10)
+classifier = RandomForestClassifier(n_estimators = 100)
 
 tprs = []
 aucs = []
@@ -33,6 +33,7 @@ mean_fpr = np.linspace(0, 1, 100)
 
 i = 0
 for train, test in cv.split(X, y):
+    # Get class probabilities for test set
     probas_ = classifier.fit(X[train], y[train]).predict_proba(X[test])
     # Compute ROC curve and area the curve
     fpr, tpr, thresholds = roc_curve(y[test], probas_[:, 1])

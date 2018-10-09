@@ -54,20 +54,15 @@ clf = clf.fit(df_training, labels_training.ravel()) # Ravel makes y to 1d array
 
 # ROC
 #TODO
-clf_score = clf.predict(df_test)
+clf_score = clf.predict_proba(df_test)
 print(clf_score)
 print(labels_test.ravel())
 
 # Compute ROC curve and ROC area for each class
 from sklearn.metrics import roc_curve, auc
 
-fpr, tpr, _ = roc_curve(labels_test, clf_score)
-#print(len(clf_score))
+fpr, tpr, _ = roc_curve(labels_test, clf_score[:, 1])
 roc_auc = auc(fpr, tpr)
-
-# Compute micro-average ROC curve and ROC area
-#fpr["micro"], tpr["micro"], _ = roc_curve(labels_test.ravel(), clf_score.ravel())
-#roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
 
 
 # plot roc curve for test

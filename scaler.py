@@ -1,4 +1,5 @@
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.preprocessing import QuantileTransformer, RobustScaler
 import numpy as np
 
 
@@ -33,3 +34,9 @@ class MiRNAScaler():
             current += lengths[i]
         dfs = [StandardScaler().fit_transform(d.loc[:, features]) for d in dfs]
         return np.concatenate((dfs), axis=0)
+
+    def robust_scaler(x):
+        return RobustScaler().fit_transform(x)
+
+    def quantile_scaler(x, n=1000):
+        return QuantileTransformer(n_quantiles=n).fit_transform(x)
