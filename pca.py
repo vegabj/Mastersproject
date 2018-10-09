@@ -46,7 +46,6 @@ else:
 
 # Separate features and targets / meta-data
 features = df.axes[1].values
-print(len(df), len(target))
 df['target'] = target
 df['group'] = group
 
@@ -55,9 +54,9 @@ y = df.loc[:,'target'].values
 
 # Apply normalization
 from scaler import MiRNAScaler
-x = MiRNAScaler.standard_scaler(x)
+#x = MiRNAScaler.standard_scaler(x)
 #x = MiRNAScaler.group_scaler(df, features)
-#x = MiRNAScaler.miRNA_scaler(x)
+x = MiRNAScaler.miRNA_scaler(x)
 #x = MiRNAScaler.set_scaler(df, lengths, features)
 
 df_index = df.axes[0]
