@@ -29,7 +29,7 @@ for i in range(1, len(data) // 10):
     last = i
     fig, ax = plt.subplots()
     ax.set_title('MiRNA boxplots')
-    ax.boxplot(d)
-    ax.legend(legend)
+    ax.boxplot(d, labels=legend)
+    #ax.legend(legend)
 
     plt.show()

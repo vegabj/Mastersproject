@@ -14,7 +14,7 @@ def get_sets():
 	return ["Hepmark_Microarray", "Hepmark_Tissue", "Hepmark_Paired_Tissue",
 			"Coloncancer_GCF_2014_295", "GuihuaSun_PMID_26646696_colon",
 			"GuihuaSun_PMID_26646696_rectal", "PublicCRC_GSE46622_colon",
-			"PublicCRC_GSE46622_rectal", "PublicCRC_PMID_26436952"]
+			"PublicCRC_GSE46622_rectal", "PublicCRC_PMID_26436952", "PublicCRC_PMID_23824282"]
 
 '''
 Hepmark
@@ -225,25 +225,16 @@ def read_publicCRC_GSE46622_rectal():
 	sampleSheet = sampleSheet.ix[df.index]
 	#TODO: only 2 samples
 
-	df.dropna()
 	return df, sampleSheet.loc[:, 'disease_state_s'], sampleSheet.loc[:, 'subject_s']
 
 
 def read_publicCRC_PMID_23824282():
-	'''
 	path = r'%s' % getcwd().replace('\\','/')
-	path = path + "/Data/ColonCancer/PublicCRC_PMID_23824282/"
-	analyses = path + "analyses/MatureMatrix.csv"
-	raw = path + "raw/SampleSheet.txt"
+	analyses = path + "/Data/ColonCancer/PublicCRC_PMID_23824282/analyses/MatureMatrix.csv"
 	df = pd.read_csv(analyses, sep="\t").transpose()
-	sampleSheet = pd.read_csv(raw, sep="\t",
-		usecols=['Characteristics[disease]', 'Run_s', 'subject_s', 'Characteristics[organism part]'],
-		index_col='Run_s', names=['disease', 'id'])
-	# TODO: Split in colon / rectal tissue and /or Age, Gender and Race
 
-	df.dropna()
-	'''
-	print("Missing target variable (whole set of same type with no normal tissue to compare)")
+
+	return df, ['Tumor' for i in range(len(df))], [i for i in range(len(df))]
 
 
 def read_publicCRC_PMID_26436952():
@@ -288,3 +279,5 @@ def read_number(i):
 		return read_publicCRC_GSE46622_rectal()
 	elif i == 8:
 		return read_publicCRC_PMID_26436952()
+	elif i == 9:
+		return read_publicCRC_PMID_23824282()
