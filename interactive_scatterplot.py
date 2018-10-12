@@ -16,6 +16,9 @@ def pca_scatter(finalDf, multi_select, lengths):
     ax.set_title('2 component PCA', fontsize = 20)
 
     # Use different markers if several datasets are used
+
+    plots = {}
+
     if multi_select:
         markers = ['v', '^', 'o', 's', 'D']
         legend_elements = [Line2D([0], [0], marker ='o', color='w', label = 'Normal'
@@ -28,7 +31,7 @@ def pca_scatter(finalDf, multi_select, lengths):
         for i in range(len(lengths)):
             currentDf = temp_df.head(lengths[i])
             color = ['g' if tar == 'Tumor' else 'r' if tar == 'Normal' else 'b' for tar in currentDf.target.values]
-            ax.scatter(currentDf['principal component 1'].values
+            s = ax.scatter(currentDf['principal component 1'].values
                        , currentDf['principal component 2'].values
                        , c = color
                        , s = 50
@@ -37,11 +40,12 @@ def pca_scatter(finalDf, multi_select, lengths):
             legend_elements.append(Line2D([0], [0], marker = markers[i], color='w'
                                     , label = 'Data set '+str(i+1), markerfacecolor='b'
                                     , markersize=10))
+            plots[s] = currentDf
             temp_df = temp_df.drop(currentDf.index)
 
     else:
         color = ['g' if tar == 'Tumor' else 'r' if tar == 'Normal' else 'b' for tar in finalDf.target.values]
-        ax.scatter(finalDf['principal component 1'].values
+        s = ax.scatter(finalDf['principal component 1'].values
                    , finalDf['principal component 2'].values
                    , c = color
                    , s = 50
@@ -52,6 +56,7 @@ def pca_scatter(finalDf, multi_select, lengths):
                             , markerfacecolor='r', markersize=10)
                         , Line2D([0], [0], marker ='o', color='w', label = 'Tumor'
                             , markerfacecolor='g', markersize=10)]
+        plots[s] = finalDf
 
     ax.legend(handles=legend_elements)
     ax.grid()
@@ -62,10 +67,11 @@ def pca_scatter(finalDf, multi_select, lengths):
         label_pos_x = event.mouseevent.xdata
         label_pos_y = event.mouseevent.ydata
         offset = 0
+        series = plots[event.artist]
 
         for i in ind:
-            label = finalDf.index[i]
-            print(finalDf.iloc[i])
+            label = series.index[i]
+            print(series.iloc[i])
             print("Clicked pos", label_pos_x, label_pos_y)
             ann = annotate(
                 ax,
