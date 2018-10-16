@@ -44,20 +44,17 @@ def transform_sequence_to_microarray_test_coloncancer_GCF_2014_295():
     path = r'%s' % getcwd().replace('\\','/') + "/Data/ColonCancer/ColonCancer_GCF-2014-295/analyses/MatureMatrixFormatted.csv"
     df.to_csv(path)
 
-def transform_sequence_to_microarray_test_guihuasun():
-    df, _, _ = data_reader.read_guihuaSun_PMID_26646696_colon()
+def transform_sequence_to_microarray_test():
+    # Run 4 datasets through
+    path = r'%s' % getcwd().replace('\\','/')
+    path = path + "/Data/ColonCancer/GuihuaSun-PMID_26646696/"
+    analyses = path + "analyses/MatureMatrix.csv"
+    df = pd.read_csv(analyses, sep="\t").transpose()
     df = transform_sequence_to_microarray(df)
-    path = r'%s' % getcwd().replace('\\','/') + "/Data/Formatted/guihuaSun.csv"
-    df.to_csv(path)
-
-def transform_sequence_to_microarray_test_guihuasun_r():
-    df, _, _ = data_reader.read_guihuaSun_PMID_26646696_rectal()
-    df = transform_sequence_to_microarray(df)
-    path = r'%s' % getcwd().replace('\\','/') + "/Data/Formatted/guihuaSun_r.csv"
-    df.to_csv(path)
+    to = path + "analyses/MatureMatrixFormatted.csv"
+    df.to_csv(to)
 
 #transform_sequence_to_microarray_test_hepmark_paired_tissue()
 #transform_sequence_to_microarray_test_hepmark_tissue()
 #transform_sequence_to_microarray_test_coloncancer_GCF_2014_295()
-#transform_sequence_to_microarray_test_guihuasun()
-#transform_sequence_to_microarray_test_guihuasun_r()
+transform_sequence_to_microarray_test()

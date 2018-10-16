@@ -54,19 +54,22 @@ y = df.loc[:,'target'].values
 
 # Apply normalization
 from scaler import MiRNAScaler
-x = MiRNAScaler.standard_scaler(x)
+#x = MiRNAScaler.standard_scaler(x)
 #x = MiRNAScaler.group_scaler(df, features)
 #x = MiRNAScaler.miRNA_scaler(x)
-#x = MiRNAScaler.set_scaler(df, lengths, features)
+if multi_select:
+    x = MiRNAScaler.set_scaler(df, lengths, features)
+else:
+    x = MiRNAScaler.standard_scaler(x)
 
 df_index = df.axes[0]
 
 from sklearn.decomposition import PCA
-pca = PCA(n_components=4)
+pca = PCA(n_components=2)
 principalComponents = pca.fit_transform(x)
 principalDf = pd.DataFrame(data = principalComponents
-             , columns = ['principal component 1', 'principal component 2'
-             ,'principal component 3', 'principal component 4']
+             , columns = ['principal component 1', 'principal component 2']
+             #,'principal component 3', 'principal component 4']
              , index = df_index)
 
 finalDf = pd.concat([principalDf, df[['target']]], axis = 1)

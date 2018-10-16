@@ -14,7 +14,9 @@ def get_sets():
 	return ["Hepmark_Microarray", "Hepmark_Tissue", "Hepmark_Paired_Tissue",
 			"Coloncancer_GCF_2014_295", "GuihuaSun_PMID_26646696_colon",
 			"GuihuaSun_PMID_26646696_rectal", "PublicCRC_GSE46622_colon",
-			"PublicCRC_GSE46622_rectal", "PublicCRC_PMID_26436952", "PublicCRC_PMID_23824282"]
+			"PublicCRC_GSE46622_rectal", "PublicCRC_PMID_23824282_colon",
+			"PublicCRC_PMID_23824282_rectal", "PublicCRC_PMID_26436952_colon",
+			"PublicCRC_PMID_26436952_rectal"]
 
 '''
 Hepmark
@@ -49,7 +51,7 @@ def read_hepmark_tissue():
 					if not sampleSheetDf.index[sampleSheetDf['Normal'] == id].empty
 					else sampleSheetDf.index[sampleSheetDf['Tumor'] == id][0]
 					for id in df2.axes[0]]
-	# TODO: Samplesheet and MatureMatrix missmatch
+	# NB: Samplesheet and MatureMatrix missmatch
 	df2 = df2.drop(['XXXX', 'ta-164'])
 	df = df.drop(['na144_2', 'na-164'])
 
@@ -141,9 +143,9 @@ def read_coloncancer_GCF_2014_295_formatted():
 def read_guihuaSun_PMID_26646696_colon():
 	path = r'%s' % getcwd().replace('\\','/')
 	path = path + "/Data/ColonCancer/GuihuaSun-PMID_26646696/"
-	analyses = path + "analyses/MatureMatrix.csv"
+	analyses = path + "analyses/MatureMatrixFormatted.csv"
 	raw = path + "raw/SampleSheet.txt"
-	df = pd.read_csv(analyses, sep="\t").transpose()
+	df = pd.read_csv(analyses, index_col = 0).transpose()
 	sampleSheet = pd.read_csv(raw, sep="\t", usecols=['Diease', 'File', 'ID', 'Tissue'], index_col="File")
 	sampleSheet['group'] = sampleSheet.apply(lambda row: row['ID'].split('-')[0], axis=1)
 	# Drop rectal columns
@@ -156,17 +158,13 @@ def read_guihuaSun_PMID_26646696_colon():
 	df.dropna()
 	return df, sampleSheet.loc[:, 'Diease'], sampleSheet.loc[:, 'group']
 
-# TODO  Q1
-def read_guihuaSun_PMID_26646696_colon_formatted():
-	pass
-
 
 def read_guihuaSun_PMID_26646696_rectal():
 	path = r'%s' % getcwd().replace('\\','/')
 	path = path + "/Data/ColonCancer/GuihuaSun-PMID_26646696/"
-	analyses = path + "analyses/MatureMatrix.csv"
+	analyses = path + "analyses/MatureMatrixFormatted.csv"
 	raw = path + "raw/SampleSheet.txt"
-	df = pd.read_csv(analyses, sep="\t").transpose()
+	df = pd.read_csv(analyses, index_col = 0).transpose()
 	sampleSheet = pd.read_csv(raw, sep="\t", usecols=['Diease', 'File', 'ID', 'Tissue'], index_col="File")
 	sampleSheet['group'] = sampleSheet.apply(lambda row: row['ID'].split('-')[0], axis=1)
 	# Drop colon columns
@@ -183,9 +181,9 @@ def read_guihuaSun_PMID_26646696_rectal():
 def read_publicCRC_GSE46622_colon():
 	path = r'%s' % getcwd().replace('\\','/')
 	path = path + "/Data/ColonCancer/PublicCRC_GSE46622/"
-	analyses = path + "analyses/MatureMatrix.csv"
+	analyses = path + "analyses/MatureMatrixFormatted.csv"
 	raw = path + "raw/SraRunTable.txt"
-	df = pd.read_csv(analyses, sep="\t").transpose()
+	df = pd.read_csv(analyses, index_col=0).transpose()
 	sampleSheet = pd.read_csv(raw, sep="\t", usecols=['disease_state_s', 'Run_s', 'subject_s', 'tissue_s'], index_col='Run_s')
 	# Drop metastasis
 	df['disease_state'] = sampleSheet.loc[:, 'disease_state_s']
@@ -208,9 +206,9 @@ def read_publicCRC_GSE46622_colon():
 def read_publicCRC_GSE46622_rectal():
 	path = r'%s' % getcwd().replace('\\','/')
 	path = path + "/Data/ColonCancer/PublicCRC_GSE46622/"
-	analyses = path + "analyses/MatureMatrix.csv"
+	analyses = path + "analyses/MatureMatrixFormatted.csv"
 	raw = path + "raw/SraRunTable.txt"
-	df = pd.read_csv(analyses, sep="\t").transpose()
+	df = pd.read_csv(analyses, index_col = 0).transpose()
 	sampleSheet = pd.read_csv(raw, sep="\t", usecols=['disease_state_s', 'Run_s', 'subject_s', 'tissue_s'], index_col='Run_s')
 	# Drop metastasis
 	df['disease_state'] = sampleSheet.loc[:, 'disease_state_s']
@@ -223,41 +221,74 @@ def read_publicCRC_GSE46622_rectal():
 	df = df.drop(['tissue'], axis=1)
 	sampleSheet['disease_state_s'] = ['Normal' if s == 'benign' else 'Tumor' if s == 'tumor' else 'error' for s in sampleSheet.loc[:, 'disease_state_s']]
 	sampleSheet = sampleSheet.ix[df.index]
-	#TODO: only 2 samples
+	#NB: only 2 samples. Does not work with 4 principal components
+	# TODO: Look into this
 
 	return df, sampleSheet.loc[:, 'disease_state_s'], sampleSheet.loc[:, 'subject_s']
 
 
-def read_publicCRC_PMID_23824282():
+def read_publicCRC_PMID_23824282_colon():
 	path = r'%s' % getcwd().replace('\\','/')
-	analyses = path + "/Data/ColonCancer/PublicCRC_PMID_23824282/analyses/MatureMatrix.csv"
-	df = pd.read_csv(analyses, sep="\t").transpose()
-
+	analyses = path + "/Data/ColonCancer/PublicCRC_PMID_23824282/analyses/MatureMatrixFormatted.csv"
+	df = pd.read_csv(analyses, index_col=0).transpose()
+	sspath = path+"/Data/ColonCancer/PublicCRC_PMID_23824282/raw/SampleSheet.txt"
+	sampleSheet = pd.read_csv(sspath, sep="\t", index_col='Run_s')
+	sampleSheet = sampleSheet[sampleSheet['Characteristics[organism part]'] == 'colon']
+	df = df.ix[sampleSheet.index]
+	df = df.dropna()
 
 	return df, ['Tumor' for i in range(len(df))], [i for i in range(len(df))]
 
 
-def read_publicCRC_PMID_26436952():
+def read_publicCRC_PMID_23824282_rectal():
+	path = r'%s' % getcwd().replace('\\','/')
+	analyses = path + "/Data/ColonCancer/PublicCRC_PMID_23824282/analyses/MatureMatrixFormatted.csv"
+	df = pd.read_csv(analyses, index_col=0).transpose()
+	sspath = path+"/Data/ColonCancer/PublicCRC_PMID_23824282/raw/SampleSheet.txt"
+	sampleSheet = pd.read_csv(sspath, sep="\t", index_col='Run_s')
+	sampleSheet = sampleSheet[sampleSheet['Characteristics[organism part]'] == 'rectum']
+	df = df.ix[sampleSheet.index]
+	df = df.dropna()
+
+	return df, ['Tumor' for i in range(len(df))], [i for i in range(len(df))]
+
+
+def read_publicCRC_PMID_26436952_colon():
 	path = r'%s' % getcwd().replace('\\','/')
 	path = path + "/Data/ColonCancer/PublicCRC_PMID_26436952/"
-	analyses = path + "analyses/MatureMatrix.csv"
+	analyses = path + "analyses/MatureMatrixFormatted.csv"
 	raw = path + "raw/SampleSheet.txt"
-	df = pd.read_csv(analyses, sep="\t").transpose()
+	df = pd.read_csv(analyses, index_col = 0).transpose()
 	sampleSheet = pd.read_csv(raw, sep="\t", usecols=['anonymized_name', 'tumor_type', 'subject_alias', 'disease_site'], index_col='anonymized_name')
-	print(sampleSheet)
 	sub = sampleSheet[sampleSheet.tumor_type == 'Metastasis']
-	sampleSheet = sampleSheet.drop(sub.index)
-	print(sampleSheet)
+	sampleSheet, df = sampleSheet.drop(sub.index), df.drop(sub.index)
+	sub = sampleSheet[sampleSheet.tumor_type == 'Local Recurrence']
+	sampleSheet, df = sampleSheet.drop(sub.index), df.drop(sub.index)
+	sampleSheet = sampleSheet[sampleSheet.disease_site != 'Rectum']
+	sampleSheet = sampleSheet[sampleSheet.disease_site != 'Liver']
+	sampleSheet = sampleSheet[sampleSheet.disease_site != 'Stomach']
+	sampleSheet = sampleSheet[sampleSheet.disease_site != 'Lung']
+	sampleSheet = sampleSheet[sampleSheet.disease_site != 'Ovarian']
+	df = df.ix[sampleSheet.index]
+	types = ['Normal' if type == 'Normal' else 'Tumor' if type == 'Primary Tumor' else type for type in sampleSheet.loc[:, 'tumor_type']]
+	return df, types, sampleSheet.loc[:, 'subject_alias']
 
-	# TODO: remove
-	# Liver
-	# ovarian
-	# Lung
-	# Rectum
-	# TODO: has "Primary Tumor instead of Tumor"
 
-	df.dropna()
-	return df, sampleSheet.loc[:, 'tumor_type'], sampleSheet.loc[:, 'subject_alias']
+def read_publicCRC_PMID_26436952_rectal():
+	path = r'%s' % getcwd().replace('\\','/')
+	path = path + "/Data/ColonCancer/PublicCRC_PMID_26436952/"
+	analyses = path + "analyses/MatureMatrixFormatted.csv"
+	raw = path + "raw/SampleSheet.txt"
+	df = pd.read_csv(analyses, index_col = 0).transpose()
+	sampleSheet = pd.read_csv(raw, sep="\t", usecols=['anonymized_name', 'tumor_type', 'subject_alias', 'disease_site'], index_col='anonymized_name')
+	sub = sampleSheet[sampleSheet.tumor_type == 'Metastasis']
+	sampleSheet, df = sampleSheet.drop(sub.index), df.drop(sub.index)
+	sub = sampleSheet[sampleSheet.tumor_type == 'Local Recurrence']
+	sampleSheet, df = sampleSheet.drop(sub.index), df.drop(sub.index)
+	sampleSheet = sampleSheet[sampleSheet.disease_site == 'Rectum']
+	df = df.ix[sampleSheet.index]
+	types = ['Normal' if type == 'Normal' else 'Tumor' if type == 'Primary Tumor' else type for type in sampleSheet.loc[:, 'tumor_type']]
+	return df, types, sampleSheet.loc[:, 'subject_alias']
 
 
 def read_number(i):
@@ -268,7 +299,7 @@ def read_number(i):
 	elif i == 2:
 		return read_hepmark_paired_tissue_formatted()
 	elif i == 3:
-		return read_coloncancer_GCF_2014_295()
+		return read_coloncancer_GCF_2014_295_formatted()
 	elif i == 4:
 		return read_guihuaSun_PMID_26646696_colon()
 	elif i == 5:
@@ -278,6 +309,10 @@ def read_number(i):
 	elif i == 7:
 		return read_publicCRC_GSE46622_rectal()
 	elif i == 8:
-		return read_publicCRC_PMID_26436952()
+		return read_publicCRC_PMID_23824282_colon()
 	elif i == 9:
-		return read_publicCRC_PMID_23824282()
+		return read_publicCRC_PMID_23824282_rectal()
+	elif i == 10:
+		return read_publicCRC_PMID_26436952_colon()
+	elif i == 11:
+		return read_publicCRC_PMID_26436952_rectal()

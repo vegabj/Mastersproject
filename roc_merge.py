@@ -7,6 +7,7 @@ from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedKFold
 from scipy import interp
+from scaler import MiRNAScaler
 
 # Import data
 df_training, labels_training, groups_training = data_reader.read_hepmark_microarray()
@@ -16,7 +17,11 @@ df = df_utils.merge_frames([df_training, df_test, df_validation])
 
 
 X = df.values
+#features = df.axes[1].values
+#lengths = [len(df_training), len(df_test), len(df_validation)]
+#X = MiRNAScaler.set_scaler(df, lengths, features)
 X = StandardScaler().fit_transform(X)
+
 n_samples, n_features = X.shape
 
 # Transform labels to real values
