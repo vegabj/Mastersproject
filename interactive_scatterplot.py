@@ -28,8 +28,8 @@ def pca_scatter(finalDf, multi_select, lengths):
 
         temp_df = finalDf
 
-        for i in range(len(lengths)):
-            currentDf = temp_df.head(lengths[i])
+        for i, length in enumerate(lengths):
+            currentDf = temp_df.head(length)
             color = ['g' if tar == 'Tumor' else 'r' if tar == 'Normal' else 'b' for tar in currentDf.target.values]
             s = ax.scatter(currentDf['principal component 1'].values
                        , currentDf['principal component 2'].values

@@ -234,9 +234,8 @@ def read_publicCRC_PMID_23824282_colon():
 	sspath = path+"/Data/ColonCancer/PublicCRC_PMID_23824282/raw/SampleSheet.txt"
 	sampleSheet = pd.read_csv(sspath, sep="\t", index_col='Run_s')
 	sampleSheet = sampleSheet[sampleSheet['Characteristics[organism part]'] == 'colon']
+	sampleSheet = sampleSheet.drop(['SRR5914652', 'SRR5914656','SRR5914655', ])
 	df = df.ix[sampleSheet.index]
-	df = df.dropna()
-
 	return df, ['Tumor' for i in range(len(df))], [i for i in range(len(df))]
 
 

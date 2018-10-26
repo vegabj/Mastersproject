@@ -23,4 +23,12 @@ def test_merge_frames():
     df3, _, _ = data_reader.read_hepmark_paired_tissue_formatted()
     df = merge_frames([df1,df2])
 
-#test_merge_frames()
+def fetch_df_samples(df_val, pos, neg):
+    df_val_pos = df_val.loc[df_val["target"] == "Normal"].sample(n=pos)
+    df_val_neg = df_val.loc[df_val["target"] == "Tumor"].sample(n=neg)
+
+    # Allign features
+    df_val = pd.concat([df_val_pos, df_val_neg])
+    tar_val = df_val.loc[:, "target"]
+    df_val = df_val.drop("target", axis = 1)
+    return df_val, tar_val

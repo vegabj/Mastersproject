@@ -25,14 +25,14 @@ class MiRNAScaler():
 
         return np.concatenate((xs), axis=0)
 
-    def set_scaler(df, lengths, features):
+    def set_scaler(df, lengths):
         dfs = []
         dfs.append(df.head(lengths[0]))
         current = lengths[0]
         for i in range(1, len(lengths)):
             dfs.append(df.tail(len(df)-current).head(lengths[i]))
             current += lengths[i]
-        dfs = [StandardScaler().fit_transform(d.loc[:, features]) for d in dfs]
+        dfs = [StandardScaler().fit_transform(d) for d in dfs]
         return np.concatenate((dfs), axis=0)
 
     def robust_scaler(x):

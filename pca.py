@@ -41,7 +41,7 @@ if multi_select:
     lengths = [d.values.shape[0] for d in dfs]
 else:
     df, target, group = data_reader.read_number(int(selected[0]))
-    lengths = []
+    lengths = [df.values.shape[0]]
 
 
 # Separate features and targets / meta-data
@@ -54,11 +54,8 @@ y = df.loc[:,'target'].values
 
 # Apply normalization
 from scaler import MiRNAScaler
-#x = MiRNAScaler.standard_scaler(x)
-#x = MiRNAScaler.group_scaler(df, features)
-#x = MiRNAScaler.miRNA_scaler(x)
 if multi_select:
-    x = MiRNAScaler.set_scaler(df, lengths, features)
+    x = MiRNAScaler.set_scaler(df.loc[:,features], lengths)
 else:
     x = MiRNAScaler.standard_scaler(x)
 
