@@ -71,8 +71,6 @@ principalDf = pd.DataFrame(data = principalComponents
 
 finalDf = pd.concat([principalDf, df[['target']]], axis = 1)
 
-#print(finalDf)
-
 print("PCA variance ratio:", pca.explained_variance_ratio_)
 
 # Plot the principal components

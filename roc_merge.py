@@ -41,6 +41,7 @@ else:
     lengths = [df.values.shape[0]]
 
 # Scale data
+scales, values = MiRNAScaler.set_scales(df, lengths)
 X = MiRNAScaler.set_scaler(df, lengths)
 
 # Set seed for reproducability
@@ -105,29 +106,57 @@ classifier.fit(X, y)
 select = int(input("Validation set (0-11): "))
 df_val, tar_val, _ = data_reader.read_number(select)
 df_val["target"] = tar_val
-df_val_pos = df_val.loc[df_val["target"] == "Normal"]
-df_val_neg = df_val.loc[df_val["target"] == "Tumor"]
+df_val_neg = df_val.loc[df_val["target"] == "Normal"]
+df_val_pos = df_val.loc[df_val["target"] == "Tumor"]
 features = df.axes[1].values
 
 while True:
     # Fetch validation params
-    number_of_positive = int(input("pos(0-"+str(len(df_val_pos))+"): "))
-    number_of_negative = int(input("neg(0-"+str(len(df_val_neg))+"): "))
+    number_of_positive = int(input("pos samples(0-"+str(len(df_val_pos))+"): "))
+    number_of_negative = int(input("neg samples(0-"+str(len(df_val_neg))+"): "))
     df_val_final, tar_val = df_utils.fetch_df_samples(df_val, number_of_positive, number_of_negative)
 
     # Allign feature axis
     df_val_final = df_utils.merge_frames([df, df_val_final]).tail(len(df_val_final))
+    # Drop non traied features
     df_val_final = df_val_final.loc[:, features]
 
-    X_val = StandardScaler().fit_transform(df_val_final.values)
+    # Normalization strategy
+    """
+    * Check comparable mean and std for each scale.
+    * Choose the scale that is closest.
+    * TODO: Assumption that training frame has more than or equal columns
+    * Smart solution to when enough samples is gathered
+    """
+    # Standard
+    X_val1 = StandardScaler().fit_transform(df_val_final.values)
+    # non-normalized
+    X_val2 = df_val_final.values
+    # From others
+    val_scores = []
+    val_means, val_std = df_val_final.mean(axis=0), df_val_final.std(axis=0)
+    for value in values:
+        val_score = ((val_means - value[0]) ** 2).sum(0) ** .5 + ((val_std - value[1]) ** 2).sum(0) ** .5
+        val_scores.append(val_score)
+    myscale = scales[val_scores.index(min(val_scores))]
+    X_val3 = myscale.transform(df_val_final.values)
+
     y_val = np.array([0 if l == 'Normal' else 1 if l == 'Tumor' else 2 for l in tar_val])
+    X_val = [X_val1, X_val2, X_val3]
+    names = ["Standard", "Non_normalized", "From others"]
+    for X_val_sample, name in zip(X_val, names):
+        scores = classifier.predict_proba(X_val_sample)
+        fpr, tpr, thresholds = roc_curve(y_val, scores[:, 1])
+        roc_auc = auc(fpr, tpr)
+        #print(tpr, fpr)
 
-    scores = classifier.predict_proba(X_val)
-
-    fpr, tpr, thresholds = roc_curve(y_val, scores[:, 1])
-    roc_auc = auc(fpr, tpr)
-    plt.plot(fpr, tpr, lw=2,
-             label='ROC val (AUC = %0.2f)' % (roc_auc))
+        # NB: Sove problem with no roc curve if 0 neg or 0 pos samples
+        if number_of_positive == 0 or number_of_negative == 0:
+            scores = classifier.predict(X_val_sample)
+            correct = abs(sum(y_val) - sum(scores))
+            print(name, (len(y_val)-correct)/len(y_val))
+        plt.plot(fpr, tpr, lw=2,
+                 label='ROC val '+name+' (AUC = %0.2f)' % (roc_auc))
     plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',
              label='Chance', alpha=.8)
     plt.xlim([-0.05, 1.05])

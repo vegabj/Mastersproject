@@ -32,8 +32,20 @@ class MiRNAScaler():
         for i in range(1, len(lengths)):
             dfs.append(df.tail(len(df)-current).head(lengths[i]))
             current += lengths[i]
-        dfs = [StandardScaler().fit_transform(d) for d in dfs]
+        dfs = [StandardScaler().fit_transform(d.values) for d in dfs]
         return np.concatenate((dfs), axis=0)
+
+    def set_scales(df, lengths):
+        dfs = []
+        dfs.append(df.head(lengths[0]))
+        current = lengths[0]
+        for i in range(1, len(lengths)):
+            dfs.append(df.tail(len(df)-current).head(lengths[i]))
+            current += lengths[i]
+        # Gather means and std for each df
+        scales = [StandardScaler().fit(d.values) for d in dfs]
+        values = [[df.mean(axis=0), df.std(axis=0)] for df in dfs]
+        return scales, values
 
     def robust_scaler(x):
         return RobustScaler().fit_transform(x)
