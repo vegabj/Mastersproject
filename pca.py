@@ -70,7 +70,7 @@ principalDf = pd.DataFrame(data = principalComponents
              , index = df_index)
 
 finalDf = pd.concat([principalDf, df[['target']]], axis = 1)
-
+print(len(finalDf))
 print("PCA variance ratio:", pca.explained_variance_ratio_)
 
 # Plot the principal components

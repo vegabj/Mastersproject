@@ -29,7 +29,7 @@ for P in test_sizes:
         select_other = select.loc[df["Normalization"] == 'Other']
         overall = select.loc[:, "Value"].mean()
         none = select_none.loc[:, "Value"].mean()
-        standard = select_standard.loc[:, "Value"].mean()
+        standard = select_standard.loc[:, "Value"].std()
         other = select_other.loc[:, "Value"].mean()
         print("\nP", P, "N", N)
         print("Overall:", overall, "None", none, "Standard", standard, "Other", other)
@@ -55,7 +55,7 @@ for d in ds:
     scores = np.array(d)
     fig, ax = plt.subplots()
     im, cbar = heatmap.heatmap(scores, test_sizes_p, test_sizes_n, ax=ax,
-                       cmap=cm.coolwarm, cbarlabel="score [AUC / Sp]")
+                       vmin = 0.0, vmax = 1.0, cmap=cm.coolwarm, cbarlabel="score [AUC / Sp]")
     texts = heatmap.annotate_heatmap(im, valfmt="{x:.1f}")
 
     fig.tight_layout()
