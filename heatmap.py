@@ -2,8 +2,6 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-#TODO: Update with own code
-
 def heatmap(data, row_labels, col_labels, ax=None,
             cbar_kw={}, cbarlabel="", **kwargs):
     """
@@ -36,10 +34,9 @@ def heatmap(data, row_labels, col_labels, ax=None,
     cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw)
     cbar.ax.set_ylabel(cbarlabel, rotation=-90, va="bottom")
 
-    # We want to show all ticks...
+    # Show and label all ticks
     ax.set_xticks(np.arange(data.shape[1]))
     ax.set_yticks(np.arange(data.shape[0]))
-    # ... and label them with the respective list entries.
     ax.set_xticklabels(col_labels)
     ax.set_yticklabels(row_labels)
 

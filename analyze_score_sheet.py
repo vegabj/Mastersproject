@@ -27,10 +27,16 @@ for P in test_sizes:
         select_none = select.loc[df["Normalization"] == 'None']
         select_standard = select.loc[df["Normalization"] == 'Standard']
         select_other = select.loc[df["Normalization"] == 'Other']
-        overall = select.loc[:, "Value"].mean()
-        none = select_none.loc[:, "Value"].mean()
-        standard = select_standard.loc[:, "Value"].std()
-        other = select_other.loc[:, "Value"].mean()
+        if P in test_sizes[2:] and N in test_sizes[2:]:
+            overall = select.loc[:, "ROC(auc)"].mean()
+            none = select_none.loc[:, "ROC(auc)"].mean()
+            standard = select_standard.loc[:, "ROC(auc)"].mean()
+            other = select_other.loc[:, "ROC(auc)"].mean()
+        else:
+            overall = select.loc[:, "Accuracy scaled"].mean()
+            none = select_none.loc[:, "Accuracy scaled"].mean()
+            standard = select_standard.loc[:, "Accuracy scaled"].mean()
+            other = select_other.loc[:, "Accuracy scaled"].mean()
         print("\nP", P, "N", N)
         print("Overall:", overall, "None", none, "Standard", standard, "Other", other)
         overall_n.append(overall)
@@ -56,12 +62,12 @@ for d in ds:
     fig, ax = plt.subplots()
     im, cbar = heatmap.heatmap(scores, test_sizes_p, test_sizes_n, ax=ax,
                        vmin = 0.0, vmax = 1.0, cmap=cm.coolwarm, cbarlabel="score [AUC / Sp]")
-    texts = heatmap.annotate_heatmap(im, valfmt="{x:.1f}")
+    texts = heatmap.annotate_heatmap(im, valfmt="{x:.2f}")
 
     fig.tight_layout()
     plt.show()
 
 
 # 3D plot
-from plot_3d import plot_3d
-plot_3d(np.array(score_dict["overall"]), test_sizes_p, test_sizes_n)
+#from plot_3d import plot_3d
+#plot_3d(np.array(score_dict["overall"]), test_sizes_p, test_sizes_n)

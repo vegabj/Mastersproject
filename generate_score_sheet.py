@@ -51,8 +51,8 @@ classifier = RandomForestClassifier(n_estimators = 100)
 np.random.seed(0)
 # Run scoring
 test_sizes = [0, 1, 2, 4, 8, 16, 'all']
-out_df = pd.DataFrame(columns=["P", "N", "Dataset", "Value", "Performance"
-    , "Iteration", "Normalization"])
+out_df = pd.DataFrame(columns=["P", "N", "Dataset", "Sensitivity(TPR)", "Specificity(TNR)",
+     "Miss rate(FNR)", "Fall-out(FPR)", "ROC(auc)", "Accuracy", "Accuracy scaled", "Iteration", "Normalization"])
 
 current_length = 0
 for idx, length in enumerate(lengths):
@@ -97,18 +97,43 @@ for idx, length in enumerate(lengths):
 
                     # Do performance
                     if (P in test_sizes[2:] and N in test_sizes[2:]):
-                        performance = "ROC (auc)"
                         scores = classifier.predict_proba(df_val_final)
                         fpr, tpr, thresholds = roc_curve(y_test, scores[:, 1])
-                        score = auc(fpr, tpr)
-                    else:
-                        performance = "Sp"
+                        roc = auc(fpr, tpr)
                         scores = classifier.predict(df_val_final)
-                        scores = [1 if s == y_test[jj] else 0 for jj, s in enumerate(scores)]
-                        score = sum(scores) / len(scores)
-                    out_df = out_df.append({"P": P, "N": N, "Dataset": DS, "Value": score
-                        , "Performance": performance, "Iteration": i, "Normalization": normalization}
-                        , ignore_index = True)
+                        tp = sum([1 if (s == 1 and s == y_test[jj]) else 0 for jj, s in enumerate(scores)])
+                        tn = sum([1 if (s == 0 and s == y_test[jj]) else 0 for jj, s in enumerate(scores)])
+                        fp = sum([1 if (s == 1 and s != y_test[jj]) else 0 for jj, s in enumerate(scores)])
+                        fn = sum([1 if (s == 0 and s != y_test[jj]) else 0 for jj, s in enumerate(scores)])
+                        tpr = tp / (tp+fn) if (tp+fn) > 0 else "N/A"
+                        tnr = tn / (tn+fp) if (tn+fp) > 0 else "N/A"
+                        fnr = 1 - tpr if (tpr != "N/A") else "N/A"
+                        fpr = 1 - tnr if (tnr != "N/A") else "N/A"
+                        acc = tpr if (tnr == "N/A") else tnr if tpr == "N/A" else (tp+tn)/(tp+tn+fp+fn)
+                        acc_scaled = tpr if (tnr == "N/A") else tnr if tpr == "N/A" else (tpr+tnr)/2
+                    else:
+                        roc = "N/A"
+                        scores = classifier.predict(df_val_final)
+                        tp = sum([1 if (s == 1 and s == y_test[jj]) else 0 for jj, s in enumerate(scores)])
+                        tn = sum([1 if (s == 0 and s == y_test[jj]) else 0 for jj, s in enumerate(scores)])
+                        fp = sum([1 if (s == 1 and s != y_test[jj]) else 0 for jj, s in enumerate(scores)])
+                        fn = sum([1 if (s == 0 and s != y_test[jj]) else 0 for jj, s in enumerate(scores)])
+                        tpr = tp / (tp+fn) if (tp+fn) > 0 else "N/A"
+                        tnr = tn / (tn+fp) if (tn+fp) > 0 else "N/A"
+                        fnr = 1 - tpr if (tpr != "N/A") else "N/A"
+                        fpr = 1 - tnr if (tnr != "N/A") else "N/A"
+                        acc = tpr if (tnr == "N/A") else tnr if tpr == "N/A" else (tp+tn)/(tp+tn+fp+fn)
+                        acc_scaled = tpr if (tnr == "N/A") else tnr if tpr == "N/A" else (tpr+tnr)/2
+                    out_df = out_df.append({"P": P, "N": N, "Dataset": DS, "Sensitivity(TPR)": tpr
+                        , "Specificity(TNR)": tnr, "Miss rate(FNR)": fnr, "Fall-out(FPR)": fpr
+                        , "ROC(auc)": roc, "Accuracy": acc, "Accuracy scaled": acc_scaled, "Iteration": i
+                        , "Normalization": normalization} , ignore_index = True)
+                    # Sensitivity: True positive rate
+                    # Specificity: True negative rate
+                    # Fall-out: False positive rate
+                    # Miss Rate: False negative rate
+                    # Accuracy: (TP+TN)/(TP+TN+FP+FN)
+                    #  pAcc nAcc
 
 
 # Save scores to file
