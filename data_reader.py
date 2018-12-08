@@ -29,7 +29,8 @@ def read_hepmark_microarray():
 	df = pd.read_csv(path, sep="\t").transpose()
 	df2 = pd.read_csv(sampleSheet, sep='\t', usecols=['Type', 'Code'])
 	df = df.dropna()
-	#df = df.drop(['509-1-4'])
+	df = df.drop(['509-1-4'])
+	df2 = df2.drop(['509-1-4'])
 	return df, df2.loc[:, 'Type'], df2.loc[:, 'Code']
 
 
@@ -75,7 +76,7 @@ def read_hepmark_tissue_formatted():
 					if not sampleSheetDf.index[sampleSheetDf['Normal'] == id].empty
 					else sampleSheetDf.index[sampleSheetDf['Tumor'] == id][0]
 					for id in df2.axes[0]]
-	df2 = df2.drop(['XXXX', 'ta-164', 'ta157', 'tb140']) # 2 missmatch and 2 extrimities
+	df2 = df2.drop(['XXXX', 'ta-164', 'ta157', 'tb140']) # 2 missmatch and 2 extremities
 	return df, df2.loc[:, 'type'], df2.loc[:, 'group']
 
 
@@ -270,6 +271,7 @@ def read_publicCRC_PMID_26436952_colon():
 	sampleSheet = sampleSheet[sampleSheet.disease_site != 'Ovarian']
 	df = df.ix[sampleSheet.index]
 	types = ['Normal' if type == 'Normal' else 'Tumor' if type == 'Primary Tumor' else type for type in sampleSheet.loc[:, 'tumor_type']]
+
 	return df, types, sampleSheet.loc[:, 'subject_alias']
 
 
@@ -287,6 +289,7 @@ def read_publicCRC_PMID_26436952_rectal():
 	sampleSheet = sampleSheet[sampleSheet.disease_site == 'Rectum']
 	df = df.ix[sampleSheet.index]
 	types = ['Normal' if type == 'Normal' else 'Tumor' if type == 'Primary Tumor' else type for type in sampleSheet.loc[:, 'tumor_type']]
+
 	return df, types, sampleSheet.loc[:, 'subject_alias']
 
 

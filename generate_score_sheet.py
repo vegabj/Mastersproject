@@ -44,11 +44,11 @@ features = df.axes[1]
 y = np.array([0 if l == 'Normal' else 1 if l == 'Tumor' else 2 for l in target])
 df["target"] = y
 
+# Set seed for reproducability
+np.random.seed(0)
 # Setup classifier
 classifier = RandomForestClassifier(n_estimators = 100)
 
-# Set seed for reproducability
-np.random.seed(0)
 # Run scoring
 test_sizes = [0, 1, 2, 4, 8, 16, 'all']
 out_df = pd.DataFrame(columns=["P", "N", "Dataset", "Sensitivity(TPR)", "Specificity(TNR)",
@@ -74,18 +74,19 @@ for idx, length in enumerate(lengths):
             if (P == 0 and N == 0) or (not df_utils.check_df_samples(X_test, P, N)):
                 continue
             for i in range(len(X_test)):
-                df_val, y_test = df_utils.fetch_df_samples2(X_test, P, N)
                 #df_vals target gets removed here
+                df_val, y_test = df_utils.fetch_df_samples(X_test, P, N)
 
                 # Normalization strategy
-                for ii in range(3):
+                for ii in range(4):
                     if ii == 0:
-                        df_val_final = StandardScaler().fit_transform(df_val.values)
                         normalization = "Standard"
+                        df_val_final = StandardScaler().fit_transform(df_val.values)
                     if ii == 1:
-                        df_val_final = df_val.values
                         normalization = "None"
+                        df_val_final = df_val.values
                     if ii == 2:
+                        normalization = "Other"
                         val_scores = []
                         val_means, val_std = df_val.mean(axis=0), df_val.std(axis=0)
                         for value in values:
@@ -93,7 +94,25 @@ for idx, length in enumerate(lengths):
                             val_scores.append(val_score)
                         myscale = scales[val_scores.index(min(val_scores))]
                         df_val_final = myscale.transform(df_val.values)
-                        normalization = "Other"
+                    if ii == 3:
+                        normalization = "Others"
+                        val_scores = []
+                        val_means, val_std = df_val.mean(axis=0), df_val.std(axis=0)
+                        for value in values:
+                            val_score = ((val_means - value[0]) ** 2).sum(0) ** .5 + ((val_std - value[1]) ** 2).sum(0) ** .5
+                            val_scores.append(val_score)
+                        val_scores = [val_score/sum(val_scores) for val_score in val_scores]
+                        '''
+                        Has to find bias in each mirna then transform each value by factor
+
+                        local_scaler = MiRNAScaler.generate_scale(X_train.loc[:, features]
+                                                , lengths[:idx] + lengths[idx+1:], val_scores)
+                        df_val_final = local_scaler.transform(df_val.values)
+                        '''
+                        for scale, val_score in zip(scales, val_scores):
+                            #print(scale.mean_ - val_means)
+                            df_val_final += scale.transform(df_val.values)*val_score
+
 
                     # Do performance
                     if (P in test_sizes[2:] and N in test_sizes[2:]):
@@ -128,14 +147,14 @@ for idx, length in enumerate(lengths):
                         , "Specificity(TNR)": tnr, "Miss rate(FNR)": fnr, "Fall-out(FPR)": fpr
                         , "ROC(auc)": roc, "Accuracy": acc, "Accuracy scaled": acc_scaled, "Iteration": i
                         , "Normalization": normalization} , ignore_index = True)
-                    # Sensitivity: True positive rate
+                    # TODO: Use sklearn metrics for this (Precision)
+                    # Sensitivity: True positive rate / Recall
                     # Specificity: True negative rate
                     # Fall-out: False positive rate
                     # Miss Rate: False negative rate
                     # Accuracy: (TP+TN)/(TP+TN+FP+FN)
-                    #  pAcc nAcc
 
 
 # Save scores to file
-out_path = r'%s' % getcwd().replace('\\','/') + "/Out/Scores.csv"
+out_path = r'%s' % getcwd().replace('\\','/') + "/Out/Scores_new.csv"
 out_df.to_csv(out_path)

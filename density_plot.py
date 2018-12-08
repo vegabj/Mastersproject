@@ -25,38 +25,51 @@ def make_density_plot(df):
         plt.show()
 
 def make_full_density_plot(df):
+
     for sample in df.axes[1]:
         subset = df.loc[:, [sample]]
         sns.distplot(subset, hist = False, kde = True,
-            kde_kws = {'shade': False, 'linewidth': 3})
+            kde_kws = {'shade': False, 'linewidth': 1})
 
-    plt.legend(prop={'size': 16}, title = 'Samples')
-    plt.title('Density Plot with Multiple Samples')
+    #plt.legend(prop={'size': 16}, title = 'Samples')
+    #plt.tick_params(axis='both', which='major', labelsize=25)
+
+    # control x and y limits
+    plt.ylim(0, 0.23)
+    plt.xlim(-5, 20)
+
+    plt.title('Density Plot of Hepmark Microarray')
     plt.xlabel('Expression Microarray')
     plt.ylabel('Density')
-    plt.show()
+    plt.savefig("testDens.pdf", bbox_inches='tight')
+    #plt.show()
 
 
 
 def test_make_density_plot():
     import data_reader
-    #df, target, group = data_reader.read_hepmark_microarray()
-    #df, _, _ = data_reader.read_hepmark_tissue_formatted()
-    #df, _, _ = data_reader.read_hepmark_paired_tissue_formatted()
-    df1, _, _ = data_reader.read_coloncancer_GCF_2014_295()
-    df2, _, _ = data_reader.read_guihuaSun_PMID_26646696_colon()
-    df3, _, _ = data_reader.read_publicCRC_GSE46622_colon()
-    import pca_utils
-    dfs = []
-    for df in [df1, df2, df3]:
-        keep_columns = [ax for ax in df.axes[1] if not df[ax].mean() > 50]
-        df = df.loc[:, keep_columns]
-        df = pca_utils.transform_sequence_to_microarray(df)
-        dfs.append(df.transpose())
+    df1, target, group = data_reader.read_hepmark_microarray()
+    #df2, _, _ = data_reader.read_hepmark_tissue_formatted()
+    #df3, _, _ = data_reader.read_hepmark_paired_tissue_formatted()
+    #df1, _, _ = data_reader.read_coloncancer_GCF_2014_295_formatted()
+    #df2, _, _ = data_reader.read_guihuaSun_PMID_26646696_colon()
+    #df3, _, _ = data_reader.read_publicCRC_GSE46622_colon()
+    #df4, _, _ = data_reader.read_publicCRC_PMID_23824282_colon()
+    #df5, _, _ = data_reader.read_publicCRC_PMID_26436952_colon()
+    #dfs = [df1,df2,df3] #, df4, df5]
+    #import pca_utils
+    #for df in [df1, df2, df3]:
+    #    keep_columns = [ax for ax in df.axes[1] if not df[ax].mean() > 50]
+    #    df = df.loc[:, keep_columns]
+    #    df = pca_utils.transform_sequence_to_microarray(df)
+    #    dfs.append(df.transpose())
     import df_utils
-    df = df_utils.merge_frames(dfs)
+    #df = df_utils.merge_frames(dfs)
+    df = df1
     df = df.transpose()
     #make_density_plot(df)
+    from utils import latexify
+    latexify(columns=1)
     make_full_density_plot(df)
 
 test_make_density_plot()

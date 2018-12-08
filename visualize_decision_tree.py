@@ -8,9 +8,13 @@ def visualize(estimator, path, feature_names, target_names, name='tree'):
     # Export as dot file
     export_graphviz(estimator, out_file=path+name+'.dot',
                     feature_names = feature_names,
+                    label = 'all',
+                    impurity = False,
+                    #leaves_parallel = True,
                     class_names = target_names,
-                    rounded = True, proportion = False,
+                    rounded = True,
                     precision = 2, filled = True)
+    # Seems to demand manual override to remove "samples and values"
 
     # Convert to png using system command (requires Graphviz)
     #for pdf: dot -Tpdf graph1.dot -o graph1.pdf
@@ -35,7 +39,7 @@ def visualize_test():
     from os import getcwd
     path = r'%s' % getcwd().replace('\\','/') + "/Out/images/"
 
-    visualize(estimator, path, iris.feature_names, iris.target_names)
+    visualize(estimator, path, iris.feature_names, iris.target_names, name='treetest')
 
 #visualize_test()
 '''

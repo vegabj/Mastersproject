@@ -52,3 +52,6 @@ class MiRNAScaler():
 
     def quantile_scaler(x, n=1000):
         return QuantileTransformer(n_quantiles=n).fit_transform(x)
+
+    def generate_scale(df, lengths, biases):
+        pass
