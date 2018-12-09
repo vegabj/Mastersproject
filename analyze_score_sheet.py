@@ -26,7 +26,7 @@ for P in test_sizes:
         select_none = select.loc[df["Normalization"] == 'None']
         select_standard = select.loc[df["Normalization"] == 'Standard']
         select_other = select.loc[df["Normalization"] == 'Other']
-        select_others = select.loc[df["Normalization"] == 'Others']
+        select_others = select.loc[df["Normalization"] == 'Other2']
         if P in test_sizes[2:] and N in test_sizes[2:]:
             overall = select.loc[:, "ROC(auc)"].mean()
             none = select_none.loc[:, "ROC(auc)"].mean()

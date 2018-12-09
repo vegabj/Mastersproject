@@ -95,6 +95,18 @@ for idx, length in enumerate(lengths):
                         myscale = scales[val_scores.index(min(val_scores))]
                         df_val_final = myscale.transform(df_val.values)
                     if ii == 3:
+                        # TODO: Does not work
+                        normalization = "Other2"
+                        val_scores = []
+                        val_means, val_std = df_val.mean(axis=0), df_val.std(axis=0)
+                        for value in values:
+                            val_score = ((val_means - value[0]) ** 2).sum(0) ** .5 + ((val_std - value[1]) ** 2).sum(0) ** .5
+                            val_scores.append(val_score)
+                        myscale = scales[val_scores.index(min(val_scores))]
+                        diff = myscale.mean_ - df_val.values
+                        df_val_final = myscale.transform(df_val.values + diff)
+                    """
+                    if ii == 4:
                         normalization = "Others"
                         val_scores = []
                         val_means, val_std = df_val.mean(axis=0), df_val.std(axis=0)
@@ -111,7 +123,9 @@ for idx, length in enumerate(lengths):
                         '''
                         for scale, val_score in zip(scales, val_scores):
                             #print(scale.mean_ - val_means)
+                            #df_val.values += val_means - scale.mean_
                             df_val_final += scale.transform(df_val.values)*val_score
+                    """
 
 
                     # Do performance

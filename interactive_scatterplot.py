@@ -111,7 +111,7 @@ def pca_scatter(finalDf, multi_select, lengths):
 
 # Method for better plots in report
 def pca_scatter_latex(finalDf, multi_select, lengths):
-    fig_width = 6.9
+    fig_width = 3.39
     fig_height = fig_width
     params = {'backend': 'ps',
               'text.latex.preamble': ['\\usepackage{gensymb}'],
