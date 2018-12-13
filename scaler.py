@@ -2,7 +2,7 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.preprocessing import QuantileTransformer, RobustScaler
 import numpy as np
 
-
+# TODO: a class is not needed
 class MiRNAScaler():
 
     def __init__():
@@ -55,3 +55,11 @@ class MiRNAScaler():
 
     def generate_scale(df, lengths, biases):
         pass
+
+    def individual_scaler(X, mean=1.0):
+        #print(X[0], sum(X[0]))
+        X = X.T
+        X_scaled = StandardScaler().fit_transform(X)
+        #X_scaled = X_scaled * mean
+        #print(X_scaled.T[0], sum(X_scaled.T[0]))
+        return X_scaled.T

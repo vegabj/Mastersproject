@@ -26,7 +26,7 @@ for P in test_sizes:
         select_none = select.loc[df["Normalization"] == 'None']
         select_standard = select.loc[df["Normalization"] == 'Standard']
         select_other = select.loc[df["Normalization"] == 'Other']
-        select_others = select.loc[df["Normalization"] == 'Other2']
+        select_others = select.loc[df["Normalization"] == 'Individual']
         if P in test_sizes[2:] and N in test_sizes[2:]:
             overall = select.loc[:, "ROC(auc)"].mean()
             none = select_none.loc[:, "ROC(auc)"].mean()
@@ -71,7 +71,7 @@ for i,d in enumerate(ds):
 
     fig.tight_layout()
     #plt.show()
-    fig.savefig("C:/Users/Vegard/Desktop/Master/Mastersproject/Plots/W13/"+ext[i])
+    fig.savefig("C:/Users/Vegard/Desktop/Master/Mastersproject/Plots/W14/"+ext[i])
 
 
 # 3D plot

@@ -42,7 +42,8 @@ else:
 
 # Scale data
 scales, values = MiRNAScaler.set_scales(df, lengths)
-X = MiRNAScaler.set_scaler(df, lengths)
+#X = MiRNAScaler.set_scaler(df, lengths)
+X = MiRNAScaler.individual_scaler(df.values)
 
 # Set seed for reproducability
 np.random.seed(0)
@@ -101,6 +102,8 @@ plt.title('Receiver operating characteristic (ROC)')
 plt.legend(loc="lower right")
 plt.show()
 
+
+'''
 # Start validation:
 classifier.fit(X, y)
 select = int(input("Validation set (0-11): "))
@@ -109,6 +112,7 @@ df_val["target"] = tar_val
 df_val_neg = df_val.loc[df_val["target"] == "Normal"]
 df_val_pos = df_val.loc[df_val["target"] == "Tumor"]
 features = df.axes[1].values
+
 
 while True:
     # Fetch validation params
@@ -166,3 +170,4 @@ while True:
     plt.title('Receiver operating characteristic (ROC)')
     plt.legend(loc="lower right")
     plt.show()
+'''

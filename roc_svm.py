@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedKFold
 from scipy import interp
 from scaler import MiRNAScaler
+from sklearn.model_selection import GridSearchCV
 
 # Import data
 names = data_reader.get_sets()
@@ -58,33 +59,45 @@ y = np.array([0 if l == 'Normal' else 1 if l == 'Tumor' else 2 for l in y])
 cv = StratifiedKFold(n_splits=10)
 
 # Set the parameters by cross-validation
-from sklearn.model_selection import GridSearchCV
-tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4],
-                     'C': [1, 10, 100, 1000]},
-                    {'kernel': ['linear'], 'C': [1, 10, 100, 1000]}]
+# Sigmoid kernel is rearly the best
+tuned_parameters = [{'kernel': ['rbf'], 'gamma': [0.01, 1e-3, 0.002, 0.003, 0.005, 0.004, 0.006 1e-4, 1e-5],
+                     'C': [0.1, 1, 10, 100]},
+                    {'kernel': ['linear'], 'C': [0.1, 1, 10, 100]},
+                    {'kernel': ['poly'], 'C': [0.1, 1, 10, 100],
+                    'gamma': [1, 0.1, 0.01, 1e-3, 1e-4, 1e-5], 'coef0': [0.0, 1.0]},
+                    {'kernel': ['sigmoid'], 'C': [0.1, 1, 10, 100],
+                    'gamma': [1, 0.1, 0.01, 1e-3, 1e-4, 1e-5], 'coef0': [0.0, 1.0]}]
 
-
-classifier = svm.SVC(kernel='linear', C=100)#C=1000, kernel='rbf', gamma=8.5e-4)
+classifier = GridSearchCV(svm.SVC(), tuned_parameters, cv=5, scoring='roc_auc')
 
 tprs = []
 aucs = []
 mean_fpr = np.linspace(0, 1, 100)
-
-
-
 i = 0
+
 for train, test in cv.split(X, y):
     # Get class probabilities for test set
-    probas_ = classifier.fit(X[train], y[train]).predict(X[test])
+    classifier.fit(X[train], y[train])
+    print("Best params %d :" % i+1)
+    print(classifier.best_params_)
+    '''
+    print("Grid scores on development set:")
+    means = classifier.cv_results_['mean_test_score']
+    stds = classifier.cv_results_['std_test_score']
+    for mean, std, params in zip(means, stds, classifier.cv_results_['params']):
+        print("%0.3f (+/-%0.03f) for %r"
+              % (mean, std * 2, params))
+    '''
+    y_true, probas_ = y[test], classifier.predict(X[test])
+
     # Compute ROC curve and area the curve
-    fpr, tpr, thresholds = roc_curve(y[test], probas_)
+    fpr, tpr, _ = roc_curve(y[test], probas_)
     tprs.append(interp(mean_fpr, fpr, tpr))
     tprs[-1][0] = 0.0
     roc_auc = auc(fpr, tpr)
     aucs.append(roc_auc)
     plt.plot(fpr, tpr, lw=1, alpha=0.3,
-             label='ROC fold %d (AUC = %0.2f)' % (i, roc_auc))
-
+             label='ROC fold %d (AUC = %0.2f)' % (i+1, roc_auc))
     i += 1
 plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',
          label='Chance', alpha=.8)
@@ -111,73 +124,7 @@ plt.title('Receiver operating characteristic (ROC)')
 plt.legend(loc="lower right")
 plt.show()
 
-# Start validation:
-'''
+
 classifier.fit(X, y)
-select = int(input("Validation set (0-11): "))
-df_val, tar_val, _ = data_reader.read_number(select)
-df_val["target"] = tar_val
-df_val_neg = df_val.loc[df_val["target"] == "Normal"]
-df_val_pos = df_val.loc[df_val["target"] == "Tumor"]
-features = df.axes[1].values
-'''
-
-'''
-while True:
-    # Fetch validation params
-    number_of_positive = int(input("pos samples(0-"+str(len(df_val_pos))+"): "))
-    number_of_negative = int(input("neg samples(0-"+str(len(df_val_neg))+"): "))
-    df_val_final, tar_val = df_utils.fetch_df_samples(df_val, number_of_positive, number_of_negative)
-
-    # Allign feature axis
-    df_val_final = df_utils.merge_frames([df, df_val_final]).tail(len(df_val_final))
-    # Drop non traied features
-    df_val_final = df_val_final.loc[:, features]
-
-    # Normalization strategy
-    """
-    * Check comparable mean and std for each scale.
-    * Choose the scale that is closest.
-    * TODO: Assumption that training frame has more than or equal columns
-    * Smart solution to when enough samples is gathered
-    """
-    # Standard
-    X_val1 = StandardScaler().fit_transform(df_val_final.values)
-    # non-normalized
-    X_val2 = df_val_final.values
-    # From others
-    val_scores = []
-    val_means, val_std = df_val_final.mean(axis=0), df_val_final.std(axis=0)
-    for value in values:
-        val_score = ((val_means - value[0]) ** 2).sum(0) ** .5 + ((val_std - value[1]) ** 2).sum(0) ** .5
-        val_scores.append(val_score)
-    myscale = scales[val_scores.index(min(val_scores))]
-    X_val3 = myscale.transform(df_val_final.values)
-
-    y_val = np.array([0 if l == 'Normal' else 1 if l == 'Tumor' else 2 for l in tar_val])
-    X_val = [X_val1, X_val2, X_val3]
-    names = ["Standard", "Non_normalized", "From others"]
-    for X_val_sample, name in zip(X_val, names):
-        scores = classifier.predict_proba(X_val_sample)
-        fpr, tpr, thresholds = roc_curve(y_val, scores[:, 1])
-        roc_auc = auc(fpr, tpr)
-        #print(tpr, fpr)
-
-        # NB: Sove problem with no roc curve if 0 neg or 0 pos samples
-        if number_of_positive == 0 or number_of_negative == 0:
-            scores = classifier.predict(X_val_sample)
-            correct = abs(sum(y_val) - sum(scores))
-            print(name, (len(y_val)-correct)/len(y_val))
-        plt.plot(fpr, tpr, lw=2,
-                 label='ROC val '+name+' (AUC = %0.2f)' % (roc_auc))
-    plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',
-             label='Chance', alpha=.8)
-    plt.xlim([-0.05, 1.05])
-    plt.ylim([-0.05, 1.05])
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('Receiver operating characteristic (ROC)')
-    plt.legend(loc="lower right")
-    plt.show()
-
-'''
+print("Best params overall :")
+print(classifier.best_params_)

@@ -64,6 +64,7 @@ for idx, length in enumerate(lengths):
     # Scale training data
     scales, values = MiRNAScaler.set_scales(X_train.loc[:, features], lengths[:idx] + lengths[idx+1:])
     X_train = MiRNAScaler.set_scaler(X_train.loc[:, features], lengths[:idx] + lengths[idx+1:])
+    #X_train = MiRNAScaler.individual_scaler(X_train.loc[:, features])
 
     # Fit classifier
     classifier.fit(X_train, y_train)
@@ -95,16 +96,8 @@ for idx, length in enumerate(lengths):
                         myscale = scales[val_scores.index(min(val_scores))]
                         df_val_final = myscale.transform(df_val.values)
                     if ii == 3:
-                        # TODO: Does not work
-                        normalization = "Other2"
-                        val_scores = []
-                        val_means, val_std = df_val.mean(axis=0), df_val.std(axis=0)
-                        for value in values:
-                            val_score = ((val_means - value[0]) ** 2).sum(0) ** .5 + ((val_std - value[1]) ** 2).sum(0) ** .5
-                            val_scores.append(val_score)
-                        myscale = scales[val_scores.index(min(val_scores))]
-                        diff = myscale.mean_ - df_val.values
-                        df_val_final = myscale.transform(df_val.values + diff)
+                        normalization = "Individual"
+                        df_val_final = MiRNAScaler.individual_scaler(df_val.values)
                     """
                     if ii == 4:
                         normalization = "Others"
