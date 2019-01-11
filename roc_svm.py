@@ -59,16 +59,13 @@ y = np.array([0 if l == 'Normal' else 1 if l == 'Tumor' else 2 for l in y])
 cv = StratifiedKFold(n_splits=10)
 
 # Set the parameters by cross-validation
-# Sigmoid kernel is rearly the best
-tuned_parameters = [{'kernel': ['rbf'], 'gamma': [0.01, 1e-3, 0.002, 0.003, 0.005, 0.004, 0.006 1e-4, 1e-5],
-                     'C': [0.1, 1, 10, 100]},
-                    {'kernel': ['linear'], 'C': [0.1, 1, 10, 100]},
-                    {'kernel': ['poly'], 'C': [0.1, 1, 10, 100],
-                    'gamma': [1, 0.1, 0.01, 1e-3, 1e-4, 1e-5], 'coef0': [0.0, 1.0]},
-                    {'kernel': ['sigmoid'], 'C': [0.1, 1, 10, 100],
-                    'gamma': [1, 0.1, 0.01, 1e-3, 1e-4, 1e-5], 'coef0': [0.0, 1.0]}]
+tuned_parameters = [{'kernel': ['rbf'], 'gamma': [0.1, 0.01, 1e-3, 0.002, 0.003, 0.005, 0.004, 0.006, 1e-4, 1e-5],
+                     'C': [0.1, 1, 5, 10]},
+                    {'kernel': ['poly'], 'C': [0.1, 1, 10, 100], 'degree': [1,2,3],
+                    'gamma': [1, 0.1, 0.01, 1e-3, 1e-4, 1e-5], 'coef0': [0.0, 1.0]}
+                    ]
 
-classifier = GridSearchCV(svm.SVC(), tuned_parameters, cv=5, scoring='roc_auc')
+classifier = GridSearchCV(svm.SVC(), tuned_parameters, cv=10, scoring='roc_auc')
 
 tprs = []
 aucs = []
@@ -78,7 +75,7 @@ i = 0
 for train, test in cv.split(X, y):
     # Get class probabilities for test set
     classifier.fit(X[train], y[train])
-    print("Best params %d :" % i+1)
+    #print("Best params %d :" % i+1)
     print(classifier.best_params_)
     '''
     print("Grid scores on development set:")

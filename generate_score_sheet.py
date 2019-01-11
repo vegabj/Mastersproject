@@ -13,6 +13,8 @@ from os import getcwd
 from scaler import MiRNAScaler
 from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
+from sklearn.model_selection import GridSearchCV
+from sklearn import svm
 
 # Import data
 names = data_reader.get_sets()
@@ -47,7 +49,13 @@ df["target"] = y
 # Set seed for reproducability
 np.random.seed(0)
 # Setup classifier
-classifier = RandomForestClassifier(n_estimators = 100)
+classifier = RandomForestClassifier(n_estimators = 200)
+'''
+tuned_parameters = [{'kernel': ['rbf'], 'gamma': [0.01, 1e-3, 0.002, 0.003, 0.005, 0.004, 0.006, 1e-4],
+                     'C': [1, 10, 100]}
+                    ]
+classifier = GridSearchCV(svm.SVC(), tuned_parameters, cv=10, scoring='roc_auc')
+'''
 
 # Run scoring
 test_sizes = [0, 1, 2, 4, 8, 16, 'all']
@@ -87,7 +95,7 @@ for idx, length in enumerate(lengths):
                         normalization = "None"
                         df_val_final = df_val.values
                     if ii == 2:
-                        normalization = "Other"
+                        normalization = "Closest"
                         val_scores = []
                         val_means, val_std = df_val.mean(axis=0), df_val.std(axis=0)
                         for value in values:
@@ -123,8 +131,9 @@ for idx, length in enumerate(lengths):
 
                     # Do performance
                     if (P in test_sizes[2:] and N in test_sizes[2:]):
-                        scores = classifier.predict_proba(df_val_final)
-                        fpr, tpr, thresholds = roc_curve(y_test, scores[:, 1])
+                        #scores = classifier.predict_proba(df_val_final)[:, 1]
+                        scores = classifier.predict(df_val_final)
+                        fpr, tpr, thresholds = roc_curve(y_test, scores)
                         roc = auc(fpr, tpr)
                         scores = classifier.predict(df_val_final)
                         tp = sum([1 if (s == 1 and s == y_test[jj]) else 0 for jj, s in enumerate(scores)])

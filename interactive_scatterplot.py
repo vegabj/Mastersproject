@@ -22,7 +22,7 @@ def pca_scatter(finalDf, multi_select, lengths):
     plots = {}
 
     if multi_select:
-        markers = ['v', '^', 'o', 's', 'D']
+        markers = ['v', '^', 'o', 's', 'D', '*', '.']
         legend_elements = [Line2D([0], [0], marker ='o', color='w', label = 'Normal'
                             , markerfacecolor='r', markersize=10)
                         , Line2D([0], [0], marker ='o', color='w', label = 'Tumor'

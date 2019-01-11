@@ -57,7 +57,7 @@ y = np.array([0 if l == 'Normal' else 1 if l == 'Tumor' else 2 for l in y])
 #NOTE: label 2 should not be in any label
 
 cv = StratifiedKFold(n_splits=10)
-classifier = RandomForestClassifier(n_estimators = 100)
+classifier = RandomForestClassifier(n_estimators = 200)
 
 tprs = []
 aucs = []

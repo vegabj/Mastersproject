@@ -9,8 +9,13 @@ print("Scores to analyze:")
 for i,score in enumerate(scores):
     print(i,score)
 select = int(input("Select: "))
+print('\n\n')
 path = path + scores[select]
 df = pd.read_csv(path, index_col = 0)
+datasets = df.Dataset.unique()
+for i, dataset in enumerate(['All']+list(datasets)):
+    print(i, dataset)
+selected_dataset = int(input("Select: "))
 
 test_sizes = ['0', '1', '2', '4', '8', '16', 'all']
 
@@ -22,10 +27,11 @@ for P in test_sizes:
     others_n = []
     for N in test_sizes:
         select = df.loc[(df["P"] == P) & (df["N"] == N)]
-        #select = select.loc[select["Dataset"] == "Hepmark_Paired_Tissue"]
+        if selected_dataset:
+            select = select.loc[select["Dataset"] == datasets[selected_dataset-1]]
         select_none = select.loc[df["Normalization"] == 'None']
         select_standard = select.loc[df["Normalization"] == 'Standard']
-        select_other = select.loc[df["Normalization"] == 'Other']
+        select_other = select.loc[df["Normalization"] == 'Closest']
         select_others = select.loc[df["Normalization"] == 'Individual']
         if P in test_sizes[2:] and N in test_sizes[2:]:
             overall = select.loc[:, "ROC(auc)"].mean()
@@ -53,7 +59,8 @@ for P in test_sizes:
 test_sizes_p = [x+"P" for x in test_sizes]
 test_sizes_n = [x+"N" for x in test_sizes]
 ds = [score_dict["none"], score_dict["standard"], score_dict["other"], score_dict["others"]]
-ext = ["hep_none.pdf", "hep_standard.pdf", "hep_other.pdf", "hep_others.pdf"]
+#ext = ["hep_none.pdf", "hep_standard.pdf", "hep_other.pdf", "hep_individual.pdf"]
+ext = ["col_none.pdf", "col_standard.pdf", "col_other.pdf", "col_individual.pdf"]
 
 # Heatmap
 import matplotlib.pyplot as plt
@@ -71,7 +78,7 @@ for i,d in enumerate(ds):
 
     fig.tight_layout()
     #plt.show()
-    fig.savefig("C:/Users/Vegard/Desktop/Master/Mastersproject/Plots/W14/"+ext[i])
+    fig.savefig("C:/Users/Vegard/Desktop/Master/Mastersproject/Plots/analyze/"+ext[i])
 
 
 # 3D plot

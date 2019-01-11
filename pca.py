@@ -45,6 +45,18 @@ else:
 
 # Separate features and targets / meta-data
 features = df.axes[1].values
+
+# Restrict to known mirna related to colon cancer
+'''
+f = open("colon_cancer_sub.txt", "r")
+sub = f.read().split(';')
+sub = [s.strip() for s in sub]
+print(len(sub))
+f.close()
+features = list(set(features) & set(sub))
+'''
+
+
 df['target'] = target
 df['group'] = group
 
@@ -54,8 +66,9 @@ y = df.loc[:,'target'].values
 # Apply normalization
 from scaler import MiRNAScaler
 if multi_select:
-    x = MiRNAScaler.standard_scaler(x)
-    #x = MiRNAScaler.set_scaler(df.loc[:,features], lengths)
+    #x = MiRNAScaler.standard_scaler(x)
+    x = MiRNAScaler.set_scaler(df.loc[:,features], lengths)
+    #x = MiRNAScaler.individual_scaler(x)
 else:
     x = MiRNAScaler.standard_scaler(x)
 
@@ -75,5 +88,5 @@ print("PCA variance ratio:", pca.explained_variance_ratio_)
 
 # Plot the principal components
 import interactive_scatterplot as scatter
-scatter.pca_scatter_latex(finalDf, multi_select, lengths)
+#scatter.pca_scatter_latex(finalDf, multi_select, lengths)
 scatter.pca_scatter(finalDf, multi_select, lengths)
