@@ -37,7 +37,7 @@ def visualize_test():
     # Extract single tree
     estimator = model.estimators_[5]
     from os import getcwd
-    path = r'%s' % getcwd().replace('\\','/') + "/Out/images/"
+    path = r'%s' % getcwd().replace('\\','/') + "/Out/images/test/"
 
     visualize(estimator, path, iris.feature_names, iris.target_names, name='treetest')
 

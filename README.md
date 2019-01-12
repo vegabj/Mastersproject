@@ -8,4 +8,5 @@ Machine learning classifier for different biases using biological miRNA datasets
 * Scikit-learn
 * Seaborn
 * Graphviz
+* gseapy
 * tqdm
