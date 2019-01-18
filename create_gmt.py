@@ -1,6 +1,5 @@
 # Vegard B 2019
 
-
 # A gmt (Gene Matrix Transposed) is a file used by gsea to evaluate sequences and score
 # Column 1 Name of Test
 # Column 2 Test Description
@@ -9,6 +8,7 @@
 import pandas as pd
 from os import getcwd
 import data_reader
+import numpy as np
 
 def create_gmt_file(lst, path):
     outframe = pd.DataFrame(lst)
@@ -38,29 +38,57 @@ def extract_mirnas(df):
     lst.append(normal)
     return lst
 
+def extract_mirnas_r(df, ss):
+    # Import necessary modules
+    from rpy2.robjects.packages import importr
+    limma = importr('limma')
+    edger = importr('edgeR')
+    from rpy2.robjects import r, pandas2ri
+    pandas2ri.activate()
+    # Convert pandas df to r data frame
+    r_matrix = pandas2ri.py2ri(df)
+    r_samplesheet = pandas2ri.py2ri(ss)
+
+    # Setup R function
+    r('''
+        # create a function `f`
+        f <- function(matrix, sampleSheet) {
+            groups <- factor(sampleSheet$groups)
+            block <- na.omit(factor(sampleSheet$block))
+            design <- model.matrix(~ groups)
+
+            count.mat <- DGEList(matrix)
+            count.voom <- voom(count.mat)
+
+            dup.cor <- duplicateCorrelation(count.voom, design=design, block=block)
+            fit <- lmFit(count.voom, design=design, block=block, correlation=dup.cor$consensus.correlation)
+
+            fit <- eBayes(fit)
+            topTab <- topTable(fit, coef=2, p.value=1, number=Inf, sort.by="logFC")
+            #return(topTab)
+            print(topTab)
+        }
+        ''')
+
+    r_f = r['f']
+    # Run R function
+    r_f(r_matrix, r_samplesheet)
+    print("Success")
 
 """
-print("Testing gmt generation")
-lst1 = ["Normal", "Desc",
-        "hsa-miR-99b-5p", "hsa-miR-99a-5p", "hsa-miR-99b-5p", "hsa-miR-96-5p", "hsa-miR-7977",
-        "hsa-miR-7975", "hsa-miR-7847-3p", "hsa-miR-7704", "hsa-miR-765", "hsa-miR-7641",
-        "hsa-miR-762", "hsa-miR-7150", "hsa-miR-7114-5p", "hsa-miR-6891-5p", "hsa-miR-6858-5p",
-        "hsa-miR-939-5p", "hsa-miR-93-5p", "hsa-miR-92a-3p", "hsa-miR-874-3p", "hsa-miR-8485",
-        "hsa-miR-8072", "hsa-miR-8069", "hsa-miR-8063", "hsa-miR-146a-5p", "hsa-miR-224-3p",
-        "hsa-miR-30a-3p", "hsa-miR-3665"]
-lst2 = ["Tumor", "Desc",
-        "hsa-miR-99b-5p", "hsa-miR-99a-5p", "hsa-miR-99b-5p", "hsa-miR-96-5p", "hsa-miR-940",
-        "hsa-miR-939-5p", "hsa-miR-939-5p", "hsa-miR-939-5p", "hsa-miR-93-5p", "hsa-miR-92a-3p",
-        "hsa-miR-874-3p", "hsa-miR-8485", "hsa-miR-8072", "hsa-miR-8069", "hsa-miR-8063", "hsa-miR-146a-5p",
-        "hsa-miR-224-3p", "hsa-miR-30a-3p", "hsa-miR-3665"]
-path = r'%s' % getcwd().replace('\\','/') + "/Out/"
-create_gmt_file([lst1, lst2], path)
-"""
-
-
 print("Testing extract")
 df, tar, grp = data_reader.read_number(0)
 df['target'] = tar
 lst = extract_mirnas(df)
+path = r'%s' % getcwd().replace('\\','/') + "/Out/"
+create_gmt_file(lst, path)
+"""
+
+print("Testing extract_mirnas_r")
+df, tar, grp = data_reader.raw()
+ss = pd.DataFrame([tar, grp])
+ss = ss.rename({ss.axes[0][0]: 'groups', ss.axes[0][1]: 'block'}, axis='index').transpose()
+df = df.transpose()
+lst = extract_mirnas_r(df, ss)
 path = r'%s' % getcwd().replace('\\','/') + "/Out/"
 create_gmt_file(lst, path)

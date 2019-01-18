@@ -129,6 +129,10 @@ def read_coloncancer_GCF_2014_295():
 	# TODO: Determine if R is regular og G is regular
 	return df, target, group
 
+def raw():
+	# Temp for testing r integration of gmt
+	return read_coloncancer_GCF_2014_295()
+
 
 def read_coloncancer_GCF_2014_295_formatted():
 	path = r'%s' % getcwd().replace('\\','/')
