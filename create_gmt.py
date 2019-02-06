@@ -10,44 +10,22 @@ from os import getcwd
 import data_reader
 import numpy as np
 
-def create_gmt_file(lst, path):
+def create_gmt_file(lst, path, new=False):
     outframe = pd.DataFrame(lst)
-    outframe.to_csv(path + "new_gmt.gmt", sep='\t', header=False, index=False)
+    if new:
+        outframe.to_csv(path + "new_gmt.gmt", sep='\t', header=False, index=False)
+    else:
+        with open(path + "new_gmt.gmt", 'a') as f:
+            outframe.to_csv(f, sep='\t', header=False, index=False)
 
-def extract_mirnas(df):
-    lst = []
-    tumor_df = df.loc[df.target == 'Tumor']
-    tumor_df = tumor_df.drop('target', axis=1)
-    tumor_formatted_df = pd.DataFrame([tumor_df.mean().sort_values(ascending=False),
-                        tumor_df.std().sort_values(ascending=False)])
-    tumor_formatted_df = tumor_formatted_df.transpose()
-    tumor_formatted_df['sum'] = tumor_formatted_df[0] - tumor_formatted_df[1]
-    tumor_res = tumor_formatted_df['sum'].sort_values(ascending=False)[:30]
-    tumor = ["Tumor", ""]
-    tumor.extend(tumor_res.index.values)
-    lst.append(tumor)
-    normal_df = df.loc[df.target == 'Normal']
-    normal_df = normal_df.drop('target', axis=1)
-    normal_formatted_df = pd.DataFrame([normal_df.mean().sort_values(ascending=False),
-                        normal_df.std().sort_values(ascending=False)])
-    normal_formatted_df = normal_formatted_df.transpose()
-    normal_formatted_df['sum'] = normal_formatted_df[0] - normal_formatted_df[1]
-    normal_res = normal_formatted_df['sum'].sort_values(ascending=False)[:30]
-    normal = ["Normal", ""]
-    normal.extend(normal_res.index.values)
-    lst.append(normal)
-    return lst
-
-def extract_mirnas_r(df, ss):
+def extract_mirnas_r(df, ss, gs_name=""):
     # Import necessary modules
     from rpy2.robjects.packages import importr
+    from rpy2.robjects import r, pandas2ri
     limma = importr('limma')
     edger = importr('edgeR')
-    from rpy2.robjects import r, pandas2ri
+    # Activates automatic conversion between pandas dataframes and R data frames
     pandas2ri.activate()
-    # Convert pandas df to r data frame
-    r_matrix = pandas2ri.py2ri(df)
-    r_samplesheet = pandas2ri.py2ri(ss)
 
     # Setup R function
     r('''
@@ -56,39 +34,69 @@ def extract_mirnas_r(df, ss):
             groups <- factor(sampleSheet$groups)
             block <- na.omit(factor(sampleSheet$block))
             design <- model.matrix(~ groups)
+            #print(block)
+            #print(design)
 
             count.mat <- DGEList(matrix)
+            # table of counts (rows=features, columns=samples), group indicator for each column
             count.voom <- voom(count.mat)
+            # Transform RNA-Seq Data Ready For Linear Modelling
+
+            # Handling for microarray data
+            #count.voom = matrix
+
 
             dup.cor <- duplicateCorrelation(count.voom, design=design, block=block)
+            # Estimate the correlation between duplicate spots (regularly spaced replicate
+            # spots on the same array) or between technical replicates from a series of arrays.
+            #print(dup.cor)
             fit <- lmFit(count.voom, design=design, block=block, correlation=dup.cor$consensus.correlation)
-
+            # Fit linear model for each gene given a series of arrays
             fit <- eBayes(fit)
-            topTab <- topTable(fit, coef=2, p.value=1, number=Inf, sort.by="logFC")
-            #return(topTab)
-            print(topTab)
+            # Given a microarray linear model fit, compute moderated t-statistics,
+            # moderated F-statistic, and log-odds of differential expression by
+            # empirical Bayes moderation of the standard errors towards a common value.
+            topTab <- topTable(fit, coef=2, p.value=0.05, number="inf", sort.by="p")
+            # Extract a table of the top-ranked genes from a linear model fit.
+
+            #print(topTab)
+            return(topTab)
         }
         ''')
 
+    # Setup function binding
     r_f = r['f']
     # Run R function
-    r_f(r_matrix, r_samplesheet)
-    print("Success")
+    res = r_f(df, ss)
+    # Note: Convertion loses miRNAs as index, manually set.
+    pd_res = pandas2ri.ri2py(res)
+    index = [i for i in res.rownames]
+    pd_res['index'] = index
+    pd_res.set_index('index', inplace=True)
 
-"""
-print("Testing extract")
-df, tar, grp = data_reader.read_number(0)
-df['target'] = tar
-lst = extract_mirnas(df)
-path = r'%s' % getcwd().replace('\\','/') + "/Out/"
-create_gmt_file(lst, path)
-"""
+    # Extract abs(logFC) > 1, negative logFC as Normal and positive as Tumor
+    n_res = pd_res.loc[pd_res['logFC'] < -1.0] # -0.5 for ds 0,4,5
+    t_res = pd_res.loc[pd_res['logFC'] > 1.0] # 0.5 for ds 0,4,5
+    lst_t, lst_n = ["Tumor"+gs_name, ""], ["Normal"+gs_name, ""]
+    # Code for ds 4
+    #n_res = n_res.head(30)
+    #t_res = t_res.head(30)
+    lst_t.extend(t_res.index.values)
+    lst_n.extend(n_res.index.values)
+    return [lst_t, lst_n]
 
-print("Testing extract_mirnas_r")
-df, tar, grp = data_reader.raw()
-ss = pd.DataFrame([tar, grp])
-ss = ss.rename({ss.axes[0][0]: 'groups', ss.axes[0][1]: 'block'}, axis='index').transpose()
-df = df.transpose()
-lst = extract_mirnas_r(df, ss)
-path = r'%s' % getcwd().replace('\\','/') + "/Out/"
-create_gmt_file(lst, path)
+
+def main():
+    # Running extract_mirnas_r
+    df, tar, grp, _ = data_reader.read_main(raw=True)
+    ss = pd.DataFrame([tar, grp])
+    ss = ss.rename({ss.axes[0][0]: 'groups', ss.axes[0][1]: 'block'}, axis='index').transpose()
+    df = df.transpose()
+    lst = extract_mirnas_r(df, ss, gs_name="_7")
+
+    # Creating gmt file
+    path = r'%s' % getcwd().replace('\\','/') + "/Out/"
+    create_gmt_file(lst, path, new=True)
+
+if __name__ == "__main__":
+    main()

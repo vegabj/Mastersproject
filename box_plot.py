@@ -2,19 +2,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import data_reader
-import scaler
+import scaler as MiRNAScaler
 
 # Import data
-df, tar, grp = data_reader.read_hepmark_microarray()
+df, tar, grp, _ = data_reader.read_main()
 
 
 # Scale data
 features = df.axes[1].values
-#df[features] = scaler.MiRNAScaler.standard_scaler(df)
-#df[features] = scaler.MiRNAScaler.robust_scaler(df)
-#df[features] = scaler.MiRNAScaler.miRNA_scaler(df)
-#df[features] = scaler.MiRNAScaler.quantile_scaler(df)
-df[features] = scaler.MiRNAScaler.individual_scaler(df.values)
+#df[features] = MiRNAScaler.standard_scaler(df)
+#df[features] = MiRNAScaler.robust_scaler(df)
+#df[features] = MiRNAScaler.miRNA_scaler(df)
+#df[features] = MiRNAScaler.quantile_scaler(df)
+df[features] = MiRNAScaler.individual_scaler(df.values)
 
 '''
 data = []

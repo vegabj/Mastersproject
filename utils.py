@@ -24,7 +24,8 @@ def timed(f):
         return result
     return wrap
 
-# Code scaling plots to fit in latex
+
+# Code scaling plots to fit nicely in latex
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd

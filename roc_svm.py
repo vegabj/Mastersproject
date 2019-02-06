@@ -8,38 +8,11 @@ from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedKFold
 from scipy import interp
-from scaler import MiRNAScaler
+import scaler as MiRNAScaler
 from sklearn.model_selection import GridSearchCV
 
 # Import data
-names = data_reader.get_sets()
-print("Available data sets are:")
-for i,e in enumerate(names):
-    print(str(i)+":", e)
-selected = input("Select data set (multiselect separate with ' '): ")
-selected = selected.split(' ')
-
-multi_select = False if len(selected) == 1 else True
-if multi_select:
-    dfs = []
-    targets = []
-    groups = []
-    for select in selected:
-        df, tar, grp = data_reader.read_number(int(select))
-        dfs.append(df)
-        targets.append(tar)
-        groups.append(grp)
-
-    df = df_utils.merge_frames(dfs)
-    target = targets[0]
-    group = groups[0]
-    for tar, gro in zip(targets[1:], groups[1:]):
-        target = np.append(target, tar)
-        group = np.append(group, gro)
-    lengths = [d.values.shape[0] for d in dfs]
-else:
-    df, target, group = data_reader.read_number(int(selected[0]))
-    lengths = [df.values.shape[0]]
+df, target, group, lengths = data_reader.read_main()
 
 # Scale data
 scales, values = MiRNAScaler.set_scales(df, lengths)

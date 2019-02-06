@@ -1,3 +1,8 @@
+"""
+Adapted code from:
+https://matplotlib.org/gallery/images_contours_and_fields/image_annotated_heatmap.html
+"""
+
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -30,7 +35,6 @@ def heatmap(data, row_labels, col_labels, ax=None,
     im = ax.imshow(data, **kwargs)
 
     # Create colorbar
-    #im.clim(0,1)
     cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw)
     cbar.ax.set_ylabel(cbarlabel, rotation=-90, va="bottom")
 

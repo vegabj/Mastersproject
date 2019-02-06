@@ -10,7 +10,7 @@ import df_utils
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_curve, auc
 from os import getcwd
-from scaler import MiRNAScaler
+import scaler as MiRNAScaler
 from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 from sklearn.model_selection import GridSearchCV
@@ -24,21 +24,13 @@ for i,e in enumerate(names):
 selected = input("Select data set (multiselect separate with ' '): ")
 selected = selected.split(' ')
 
-dfs = []
-targets = []
-groups = []
+dfs, target, group = [], [], []
 for select in selected:
     df, tar, grp = data_reader.read_number(int(select))
     dfs.append(df)
-    targets.append(tar)
-    groups.append(grp)
-
+    target.extend(tar)
+    group.extend(grp)
 df = df_utils.merge_frames(dfs)
-target = targets[0]
-group = groups[0]
-for tar, gro in zip(targets[1:], groups[1:]):
-    target = np.append(target, tar)
-    group = np.append(group, gro)
 lengths = [d.values.shape[0] for d in dfs]
 
 # Prep features and target labels
@@ -48,6 +40,7 @@ df["target"] = y
 
 # Set seed for reproducability
 np.random.seed(0)
+
 # Setup classifier
 classifier = RandomForestClassifier(n_estimators = 200)
 '''
@@ -163,7 +156,7 @@ for idx, length in enumerate(lengths):
                         , "Specificity(TNR)": tnr, "Miss rate(FNR)": fnr, "Fall-out(FPR)": fpr
                         , "ROC(auc)": roc, "Accuracy": acc, "Accuracy scaled": acc_scaled, "Iteration": i
                         , "Normalization": normalization} , ignore_index = True)
-                    # TODO: Use sklearn metrics for this (Precision)
+                    # TODO: Use sklearn metrics for this (?)
                     # Sensitivity: True positive rate / Recall
                     # Specificity: True negative rate
                     # Fall-out: False positive rate
