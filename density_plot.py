@@ -64,6 +64,7 @@ def test_make_density_plot():
     #    df = pca_utils.transform_sequence_to_microarray(df)
     #    dfs.append(df.transpose())
     import df_utils
+    #df1 = df_utils.transform_sequence_to_microarray(df1, all=True)
     #df = df_utils.merge_frames(dfs)
     df = df1
     df = df.transpose()

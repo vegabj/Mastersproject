@@ -9,16 +9,6 @@ import numpy as np
 from os import getcwd
 import df_utils
 
-"""
-def get_sets():
-	return ["Hepmark_Microarray", "Hepmark_Tissue", "Hepmark_Paired_Tissue",
-			"Coloncancer_GCF_2014_295", "GuihuaSun_PMID_26646696_colon",
-			"GuihuaSun_PMID_26646696_rectal", "PublicCRC_GSE46622_colon",
-			"PublicCRC_GSE46622_rectal", "PublicCRC_PMID_23824282_colon",
-			"PublicCRC_PMID_23824282_rectal", "PublicCRC_PMID_26436952_colon",
-			"PublicCRC_PMID_26436952_rectal"]
-"""
-
 def get_sets():
 	return ["Hepmark_Microarray", "Hepmark_Tissue", "Hepmark_Paired_Tissue",
 			"Coloncancer_GCF_2014_295", "GuihuaSun_PMID_26646696",
@@ -37,6 +27,8 @@ def read_hepmark_microarray():
 	df = df.dropna()
 	df = df.drop(['509-1-4'])
 	df2 = df2.drop(['509-1-4'])
+	df.index = ["X"+ix for ix in df.index]
+	df2.index = ["X"+ix for ix in df2.index]
 	return df, df2.loc[:, 'Type'], df2.loc[:, 'Code']
 
 
@@ -165,23 +157,8 @@ def read_guihuaSun_PMID_26646696_colon():
 	df = pd.read_csv(analyses, index_col = 0).transpose()
 	sampleSheet = pd.read_csv(raw, sep="\t", usecols=['Diease', 'File', 'ID', 'Tissue'], index_col="File")
 	sampleSheet['group'] = sampleSheet.apply(lambda row: row['ID'].split('-')[0], axis=1)
-
-	return df, sampleSheet.loc[:, 'Diease'], sampleSheet.loc[:, 'group']
-
-def read_guihuaSun_PMID_26646696_rectal():
-	path = r'%s' % getcwd().replace('\\','/')
-	path = path + "/Data/ColonCancer/GuihuaSun-PMID_26646696/"
-	analyses = path + "analyses/MatureMatrixFormatted.csv"
-	raw = path + "raw/SampleSheet.txt"
-	df = pd.read_csv(analyses, index_col = 0).transpose()
-	sampleSheet = pd.read_csv(raw, sep="\t", usecols=['Diease', 'File', 'ID', 'Tissue'], index_col="File")
-	sampleSheet['group'] = sampleSheet.apply(lambda row: row['ID'].split('-')[0], axis=1)
-	# Drop colon columns
-	df['tissue'] = sampleSheet.loc[:, 'Tissue']
-	df = df[df.tissue != 'Colon']
-	df = df.drop(['tissue'], axis=1)
-	sampleSheet = sampleSheet[sampleSheet.Tissue != 'Colon']
-	sampleSheet = sampleSheet.drop(['Tissue'], axis=1)
+	df.index = ["X"+ix for ix in df.index]
+	sampleSheet.index = ["X"+ix for ix in sampleSheet.index]
 
 	return df, sampleSheet.loc[:, 'Diease'], sampleSheet.loc[:, 'group']
 
@@ -218,28 +195,6 @@ def read_publicCRC_GSE46622_colon():
 	sampleSheet = sampleSheet.ix[df.index]
 	return df, sampleSheet.loc[:, 'disease_state_s'], sampleSheet.loc[:, 'subject_s']
 
-def read_publicCRC_GSE46622_rectal():
-	path = r'%s' % getcwd().replace('\\','/')
-	path = path + "/Data/ColonCancer/PublicCRC_GSE46622/"
-	analyses = path + "analyses/MatureMatrixFormatted.csv"
-	raw = path + "raw/SraRunTable.txt"
-	df = pd.read_csv(analyses, index_col = 0).transpose()
-	sampleSheet = pd.read_csv(raw, sep="\t", usecols=['disease_state_s', 'Run_s', 'subject_s', 'tissue_s'], index_col='Run_s')
-	# Drop metastasis
-	df['disease_state'] = sampleSheet.loc[:, 'disease_state_s']
-	sub = df[df.disease_state == 'metastasis']
-	df = df.drop(sub.index)
-	df = df.drop(['disease_state'], axis=1)
-	# Drop colon columns
-	df['tissue'] = sampleSheet.loc[:, 'tissue_s']
-	df = df[df.tissue == 'colorectal biopsy, rectum/sigma']
-	df = df.drop(['tissue'], axis=1)
-	sampleSheet['disease_state_s'] = ['Normal' if s == 'benign' else 'Tumor' if s == 'tumor' else 'error' for s in sampleSheet.loc[:, 'disease_state_s']]
-	sampleSheet = sampleSheet.ix[df.index]
-	#NB: only 2 samples. Does not work with 4 principal components
-
-	return df, sampleSheet.loc[:, 'disease_state_s'], sampleSheet.loc[:, 'subject_s']
-
 
 def read_publicCRC_PMID_23824282():
 	path = r'%s' % getcwd().replace('\\','/')
@@ -258,17 +213,6 @@ def read_publicCRC_PMID_23824282_colon():
 	sspath = path+"/Data/ColonCancer/PublicCRC_PMID_23824282/raw/SampleSheet.txt"
 	sampleSheet = pd.read_csv(sspath, sep="\t", index_col='Run_s')
 	sampleSheet = sampleSheet.drop(['SRR5914652', 'SRR5914656','SRR5914655', 'SRR5914651'])
-	df = df.loc[sampleSheet.index]
-	return df, ['Tumor' for i in range(len(df))], [i for i in range(len(df))]
-
-def read_publicCRC_PMID_23824282_rectal():
-	path = r'%s' % getcwd().replace('\\','/')
-	analyses = path + "/Data/ColonCancer/PublicCRC_PMID_23824282/analyses/MatureMatrixFormatted.csv"
-	df = pd.read_csv(analyses, index_col=0).transpose()
-	sspath = path+"/Data/ColonCancer/PublicCRC_PMID_23824282/raw/SampleSheet.txt"
-	sampleSheet = pd.read_csv(sspath, sep="\t", index_col='Run_s')
-	sampleSheet = sampleSheet[sampleSheet['Characteristics[organism part]'] == 'rectum']
-	sampleSheet = sampleSheet.drop('SRR5914651')
 	df = df.loc[sampleSheet.index]
 	return df, ['Tumor' for i in range(len(df))], [i for i in range(len(df))]
 
@@ -316,23 +260,6 @@ def read_publicCRC_PMID_26436952_colon():
 
 	return df, types, sampleSheet.loc[:, 'subject_alias']
 
-def read_publicCRC_PMID_26436952_rectal():
-	path = r'%s' % getcwd().replace('\\','/')
-	path = path + "/Data/ColonCancer/PublicCRC_PMID_26436952/"
-	analyses = path + "analyses/MatureMatrixFormatted.csv"
-	raw = path + "raw/SampleSheet.txt"
-	df = pd.read_csv(analyses, index_col = 0).transpose()
-	sampleSheet = pd.read_csv(raw, sep="\t", usecols=['anonymized_name', 'tumor_type', 'subject_alias', 'disease_site'], index_col='anonymized_name')
-	sub = sampleSheet[sampleSheet.tumor_type == 'Metastasis']
-	sampleSheet, df = sampleSheet.drop(sub.index), df.drop(sub.index)
-	sub = sampleSheet[sampleSheet.tumor_type == 'Local Recurrence']
-	sampleSheet, df = sampleSheet.drop(sub.index), df.drop(sub.index)
-	sampleSheet = sampleSheet[sampleSheet.disease_site == 'Rectum']
-	df = df.ix[sampleSheet.index]
-	# TODO: sampleSheet['tumor_type'] = sampleSheet['tumor_type'].map({'Primary Tumor' : 'Tumor', 'Normal' : 'Normal'})
-	types = ['Normal' if type == 'Normal' else 'Tumor' if type == 'Primary Tumor' else type for type in sampleSheet.loc[:, 'tumor_type']]
-
-	return df, types, sampleSheet.loc[:, 'subject_alias']
 
 """
 Enrichement_scores
@@ -341,40 +268,39 @@ Enrichement_scores
 def read_enrichment_hepmark_microarray():
 	path = r'%s' % getcwd().replace('\\','/') + "/Out/enrichment_scores/es_hepmark_microarray.csv"
 	df = pd.read_csv(path, index_col = 0)
-	df.drop(['Normal_0', 'Tumor_0'], axis=1)
+	#df.drop(['Normal_0', 'Tumor_0'], axis=1)
 	return df
 
 def read_enrichment_hepmark_tissue():
 	path = r'%s' % getcwd().replace('\\','/') + "/Out/enrichment_scores/es_hepmark_tissue.csv"
 	df = pd.read_csv(path, index_col = 0)
-	df = df.drop(['Normal_1', 'Tumor_1'], axis=1)
+	#df = df.drop(['Normal_1', 'Tumor_1'], axis=1)
 	df = df.drop(['ta157', 'tb140'])
 	return df
 
 def read_enrichment_hepmark_paired_tissue():
 	path = r'%s' % getcwd().replace('\\','/') + "/Out/enrichment_scores/es_hepmark_paired_tissue.csv"
 	df = pd.read_csv(path, index_col = 0)
-	df = df.drop(['Normal_2', 'Tumor_2'], axis=1)
+	#df = df.drop(['Normal_2', 'Tumor_2'], axis=1)
 	return df
 
 def read_enrichment_colon():
 	path = r'%s' % getcwd().replace('\\','/') + "/Out/enrichment_scores/es_colon.csv"
 	df = pd.read_csv(path, index_col = 0)
-	df = df.drop(['Normal_3', 'Tumor_3'], axis=1)
+	#df = df.drop(['Normal_3', 'Tumor_3'], axis=1)
 	return df
 
 def read_enrichment_guihuasun():
 	path = r'%s' % getcwd().replace('\\','/') + "/Out/enrichment_scores/es_guihuasun.csv"
 	df = pd.read_csv(path, index_col = 0)
-	df = df.drop(['Normal_4', 'Tumor_4'], axis=1)
-	#df['Normal'] = df.loc[:, 'Normal_3'] + df.loc[:, 'Normal_5'] + df.loc[:, 'Normal_7']
-	#df['Tumor'] = df.loc[:, 'Tumor_3'] + df.loc[:, 'Tumor_5'] + df.loc[:, 'Tumor_7']
+	df.index = ["X"+ix for ix in df.index]
+	#df = df.drop(['Normal_4', 'Tumor_4'], axis=1)
 	return df
 
 def read_enrichment_gse46622():
 	path = r'%s' % getcwd().replace('\\','/') + "/Out/enrichment_scores/es_gse46622.csv"
 	df = pd.read_csv(path, index_col = 0)
-	df = df.drop(['Normal_5', 'Tumor_5'], axis=1)
+	#df = df.drop(['Normal_5', 'Tumor_5'], axis=1)
 	return df
 
 def read_enrichment_PMID_23824282():
@@ -385,39 +311,12 @@ def read_enrichment_PMID_23824282():
 def read_enrichment_PMID_26436952():
 	path = r'%s' % getcwd().replace('\\','/') + "/Out/enrichment_scores/es_PMID_26436952.csv"
 	df = pd.read_csv(path, index_col = 0)
-	df = df.drop(['Normal_7', 'Tumor_7'], axis=1)
+	#df = df.drop(['Normal_7', 'Tumor_7'], axis=1)
 	return df
 
 
 """
 Main methods
-
-
-def read_number(i):
-	if i == 0:
-		return read_hepmark_microarray()
-	elif i == 1:
-		return read_hepmark_tissue_formatted()
-	elif i == 2:
-		return read_hepmark_paired_tissue_formatted()
-	elif i == 3:
-		return read_coloncancer_GCF_2014_295_formatted()
-	elif i == 4:
-		return read_guihuaSun_PMID_26646696_colon()
-	elif i == 5:
-		return read_guihuaSun_PMID_26646696_rectal()
-	elif i == 6:
-		return read_publicCRC_GSE46622_colon()
-	elif i == 7:
-		return read_publicCRC_GSE46622_rectal()
-	elif i == 8:
-		return read_publicCRC_PMID_23824282_colon()
-	elif i == 9:
-		return read_publicCRC_PMID_23824282_rectal()
-	elif i == 10:
-		return read_publicCRC_PMID_26436952_colon()
-	elif i == 11:
-		return read_publicCRC_PMID_26436952_rectal()
 """
 
 def read_number(i):
@@ -475,7 +374,7 @@ def read_es(i):
 	elif i == 7:
 		return read_enrichment_PMID_26436952()
 
-def read_main(raw=False, es=False):
+def read_main(raw=False):
 	names = get_sets()
 	print("Available data sets are:")
 	for i,e in enumerate(names):
@@ -485,22 +384,20 @@ def read_main(raw=False, es=False):
 
 	multi_select = False if len(selected) == 1 else True
 	if multi_select:
-		dfs, target, group = [], [], []
+		dfs, target, group, es = [], [], [], []
 		for select in selected:
 			df, tar, grp = read_number_raw(int(select)) if raw else read_number(int(select))
-			if es:
-				es_df = read_es(int(select))
-				df = pd.concat([df, es_df], axis=1)
+			es_df = read_es(int(select))
+			es.append(es_df)
 			dfs.append(df)
 			target.extend(tar)
 			group.extend(grp)
 		df = df_utils.merge_frames(dfs)
+		es = pd.concat(es, axis=0)
 		lengths = [d.values.shape[0] for d in dfs]
 	else:
 		df, target, group = read_number_raw(int(selected[0])) if raw else read_number(int(selected[0]))
-		if es:
-			es_df = read_es(int(selected[0]))
-			df = pd.concat([df, es_df], axis=1)
+		es = read_es(int(selected[0]))
 		lengths = [df.values.shape[0]]
 
-	return df, target, group, lengths
+	return df, target, group, lengths, es

@@ -27,7 +27,7 @@ def set_scaler(df, lengths):
     for i in range(1, len(lengths)):
         dfs.append(df.tail(len(df)-current).head(lengths[i]))
         current += lengths[i]
-    dfs = [StandardScaler().fit_transform(d.values) for d in dfs]
+    dfs = [RobustScaler().fit_transform(d.values) for d in dfs] #MinMaxScaler(feature_range=(-1,1)
     return np.concatenate((dfs), axis=0)
 
 def set_scales(df, lengths):

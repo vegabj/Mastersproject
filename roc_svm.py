@@ -7,15 +7,17 @@ from sklearn import svm
 from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import GridSearchCV
 from scipy import interp
 import scaler as MiRNAScaler
-from sklearn.model_selection import GridSearchCV
+from sklearn.ensemble import BaggingClassifier, AdaBoostClassifier
+from sklearn.metrics import classification_report
 
 # Import data
-df, target, group, lengths = data_reader.read_main()
+df, target, group, lengths, es = data_reader.read_main()
 
 # Scale data
-scales, values = MiRNAScaler.set_scales(df, lengths)
+#scales, values = MiRNAScaler.set_scales(df, lengths)
 X = MiRNAScaler.set_scaler(df, lengths)
 
 # Set seed for reproducability
@@ -32,13 +34,36 @@ y = np.array([0 if l == 'Normal' else 1 if l == 'Tumor' else 2 for l in y])
 cv = StratifiedKFold(n_splits=10)
 
 # Set the parameters by cross-validation
+"""
 tuned_parameters = [{'kernel': ['rbf'], 'gamma': [0.1, 0.01, 1e-3, 0.002, 0.003, 0.005, 0.004, 0.006, 1e-4, 1e-5],
                      'C': [0.1, 1, 5, 10]},
                     {'kernel': ['poly'], 'C': [0.1, 1, 10, 100], 'degree': [1,2,3],
                     'gamma': [1, 0.1, 0.01, 1e-3, 1e-4, 1e-5], 'coef0': [0.0, 1.0]}
                     ]
+"""
+tuned_parameters = [{'kernel': ['rbf'], 'gamma': [0.1, 0.01, 1e-3, 1e-4],
+                     'C': [0.1, 1, 10]},
+                    #{'kernel': ['poly'], 'C': [0.1, 1, 10], 'degree': [1,2,3],
+                    #'gamma': [0.1, 0.01, 1e-3, 1e-4], 'coef0': [0.0, 1.0]}
+                    ]
 
-classifier = GridSearchCV(svm.SVC(), tuned_parameters, cv=10, scoring='roc_auc')
+classifier = GridSearchCV(svm.SVC(probability=True), tuned_parameters, n_jobs=-1, iid=False, cv=5, scoring='roc_auc')
+# DS 0-2 score: 0.91 +/- 0.04
+# DS 3-7 score: 0.68 +/- 0.20
+# DS 3, 5-7 score: 0.95 +/- 0.07
+
+# Default SVC params: C=1.0, rbf, gamma = 'auto' (1/n_features)
+#classifier = BaggingClassifier(base_estimator=svm.SVC(kernel='rbf', gamma='auto', probability=True), n_estimators=100, max_samples=1.0, max_features=1.0, n_jobs=-1, random_state = 0)
+
+# DS 0-2 score: 0.90 +/- 0.03
+# DS 3-7 score: 0.73 +/- 0.21
+# DS 3, 5-7 score: 0.95 +/- 0.06
+# Bagging + GridSearchCV: # classifier, random_state = 0)
+# DS 0-2 score: 0.88 +/- 0.05
+# DS 3-7 score: 0.67 +/- 0.16
+# DS 3, 5-7 score: 0.90 +/- 0.07
+
+#classifier = AdaBoostClassifier(base_estimator=svm.SVC(probability=True, kernel='rbf', gamma='auto'), max_samples=0.5, random_state = 0)
 
 tprs = []
 aucs = []
@@ -49,7 +74,7 @@ for train, test in cv.split(X, y):
     # Get class probabilities for test set
     classifier.fit(X[train], y[train])
     #print("Best params %d :" % i+1)
-    print(classifier.best_params_)
+    #print(classifier.best_params_)
     '''
     print("Grid scores on development set:")
     means = classifier.cv_results_['mean_test_score']
@@ -58,7 +83,11 @@ for train, test in cv.split(X, y):
         print("%0.3f (+/-%0.03f) for %r"
               % (mean, std * 2, params))
     '''
-    y_true, probas_ = y[test], classifier.predict(X[test])
+    y_true, probas_ = y[test], classifier.predict_proba(X[test])[:, 1]
+    print(classifier.decision_function(X[test]))
+    print(classifier.predict(X[test]))
+    #pred = classifier.predict(X[test])
+    #print(classification_report(y[test], pred, target_names=["Normal", "Tumor"]))
 
     # Compute ROC curve and area the curve
     fpr, tpr, _ = roc_curve(y[test], probas_)
@@ -95,6 +124,6 @@ plt.legend(loc="lower right")
 plt.show()
 
 
-classifier.fit(X, y)
-print("Best params overall :")
-print(classifier.best_params_)
+#classifier.fit(X, y)
+#print("Best params overall :")
+#print(classifier.best_params_)

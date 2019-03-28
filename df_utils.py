@@ -11,6 +11,7 @@ from os import getcwd
 
 def merge_frames(dfs):
     df = pd.concat(dfs, axis = 0, sort=False)
+    #df = df.dropna(axis=1)
     df = df.fillna(-1)
     return df
 
@@ -73,7 +74,6 @@ def transform_sequence_to_microarray(df, all=False):
     if not all:
         keep_columns = [ax for ax in df.axes[0] if df.loc[ax].mean() > 1.0]
         df = df.loc[keep_columns]
-
     return df
 
 # Test for transforming sequencing data to microarray
@@ -85,6 +85,5 @@ def transform_sequence_to_microarray_test():
     df = transform_sequence_to_microarray(df)
     to = path + "analyses/MatureMatrixFormatted.csv"
     df.to_csv(to)
-
 
 #transform_sequence_to_microarray_test()

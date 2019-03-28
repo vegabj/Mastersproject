@@ -5,6 +5,7 @@ Machine learning classifiers for different biases in biological miRNA datasets.
 
 
 ## Requirements Python
+Note: Anaconda is recommended for Windows users.
 * Numpy
 * Pandas
 * Scikit-learn
@@ -14,10 +15,14 @@ Machine learning classifiers for different biases in biological miRNA datasets.
 * tqdm
 * R
 * rpy2
-Note: Anaconda was used for running rpy2 due to easier installation for Windows.
-
 
 ## Requirements R
 * limma
 * edgeR
 * statmod
+
+
+## Usage
+TODO:
+generate_enrichment_score - Creates enrichment scores for a given dataset - This requires a GMT file
+create_gmt - Creates a gmt file for a given dataset, see source code for instructions for non RNA-sequencing sets. The gmt files should be combined.

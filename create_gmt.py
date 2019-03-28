@@ -9,6 +9,13 @@ import pandas as pd
 from os import getcwd
 import data_reader
 import numpy as np
+from rpy2.robjects.packages import importr
+from rpy2.robjects import r, pandas2ri
+# Import necessary modules in R
+limma = importr('limma')
+edger = importr('edgeR')
+# Activates automatic conversion between pandas dataframes and R data frames
+pandas2ri.activate()
 
 def create_gmt_file(lst, path, new=False):
     outframe = pd.DataFrame(lst)
@@ -19,14 +26,6 @@ def create_gmt_file(lst, path, new=False):
             outframe.to_csv(f, sep='\t', header=False, index=False)
 
 def extract_mirnas_r(df, ss, gs_name=""):
-    # Import necessary modules
-    from rpy2.robjects.packages import importr
-    from rpy2.robjects import r, pandas2ri
-    limma = importr('limma')
-    edger = importr('edgeR')
-    # Activates automatic conversion between pandas dataframes and R data frames
-    pandas2ri.activate()
-
     # Setup R function
     r('''
         # create a function `f`
@@ -42,7 +41,7 @@ def extract_mirnas_r(df, ss, gs_name=""):
             count.voom <- voom(count.mat)
             # Transform RNA-Seq Data Ready For Linear Modelling
 
-            # Handling for microarray data
+            # Handling for microarray data - Uncomment when using microarray data
             #count.voom = matrix
 
 
@@ -75,12 +74,78 @@ def extract_mirnas_r(df, ss, gs_name=""):
     pd_res.set_index('index', inplace=True)
 
     # Extract abs(logFC) > 1, negative logFC as Normal and positive as Tumor
-    n_res = pd_res.loc[pd_res['logFC'] < -1.0] # -0.5 for ds 0,4,5
-    t_res = pd_res.loc[pd_res['logFC'] > 1.0] # 0.5 for ds 0,4,5
+    n_res = pd_res.loc[pd_res['logFC'] < -1.0]
+    t_res = pd_res.loc[pd_res['logFC'] > 1.0]
     lst_t, lst_n = ["Tumor"+gs_name, ""], ["Normal"+gs_name, ""]
-    # Code for ds 4
-    #n_res = n_res.head(30)
-    #t_res = t_res.head(30)
+    lst_t.extend(t_res.index.values)
+    lst_n.extend(n_res.index.values)
+    return [lst_t, lst_n]
+
+
+def extract_mirnas_r_guihasun(df, ss, gs_name=""):
+    r('''
+        CreateDesign <- function(expressionMatrix, sampleSheet) {
+            sampleSheet[sampleSheet == ""] <- NA
+            sampleType <- sampleSheet$Diease
+            groups <- factor(sampleType)
+            site <- factor(sampleSheet$Tissue)
+            groupSite <- factor(paste0(groups, site))
+            stage <- factor(sampleSheet$Stage)
+            age <- sampleSheet$Age
+            gender <- factor(sampleSheet$Gender)
+            race <- factor(sampleSheet$Race)
+            block <- factor(sub("-.", "", sampleSheet$ID))
+            design <- model.matrix(~ 0 + groupSite + stage + age + gender)
+            colnames(design) <- sub("^site", "", sub("^groupSite", "", colnames(design)))
+            colnames(design) <- sub("^site", "", sub("^groups", "", colnames(design)))
+            return(list(design=design, block=block[as.numeric(rownames(design))],
+                contrasts=makeContrasts(TvN=0.5*(TumorColon+TumorRectal)-0.5*(NormalColon+NormalRectal), ColVsRect_Norm=NormalColon-NormalRectal, ColVsRect_Tum=TumorColon-TumorRectal,
+                ColIntRect=(TumorColon-TumorRectal)-(NormalColon-NormalRectal), Stage3_4vsRest=0.5*(stage4+stage3)-0.5*(stage2+stage1), MvsF=genderMale, Stage3vs1=stage3-stage1, levels=design), groups=groups[as.numeric(rownames(design))]))
+            return(list(design=design, block=block, contrasts=makeContrasts(TvN=Tumor-Normal, ColVsRect=Rectal, levels=design), groups=groups))
+            }''')
+    r_create_design = r['CreateDesign']
+    r('''
+        CreateSampleSheet <- function(expressionMatrix) {
+            sampleSheet <- read.table("Data/ColonCancer/GuihuaSun-PMID_26646696/raw/SampleSheet.txt", header=TRUE, sep="\t")
+            ret <- sampleSheet[,c("ID", "Diease", "Tissue", "Stage", "Age", "Gender", "Race", "File")]
+            rownames(ret) <- ret$File
+            return(ret[sub("^X", "", colnames(expressionMatrix)),])
+            }
+    ''')
+    r_create_samplesheet = r['CreateSampleSheet']
+    r('''
+        # create a function `f`
+        f <- function(matrix, sampleSheet, designInfo) {
+            groups <- factor(sampleSheet$groups)
+            block <- na.omit(factor(sampleSheet$block))
+            design <- designInfo$design
+
+            count.mat <- DGEList(matrix)
+            count.voom <- voom(count.mat)
+
+            dup.cor <- duplicateCorrelation(count.voom, design=design, block=block)
+            fit <- lmFit(count.voom, design=design, block=block, correlation=dup.cor$consensus.correlation)
+            fit <- contrasts.fit(fit, designInfo$contrasts)
+            fit <- eBayes(fit)
+            topTab <- topTable(fit, coef="TvN", p.value=0.05, number="inf", sort.by="p")
+            return(topTab)
+        }
+        ''')
+    r_f = r['f']
+
+    sampleSheet = r_create_samplesheet(df)
+    designInfo = r_create_design(df, sampleSheet)
+    res = r_f(df, ss, designInfo)
+
+    pd_res = pandas2ri.ri2py(res)
+    index = [i for i in res.rownames]
+    pd_res['index'] = index
+    pd_res.set_index('index', inplace=True)
+
+    # Extract abs(logFC) > 1, negative logFC as Normal and positive as Tumor
+    n_res = pd_res.loc[pd_res['logFC'] < -1.0]
+    t_res = pd_res.loc[pd_res['logFC'] > 1.0]
+    lst_t, lst_n = ["Tumor"+gs_name, ""], ["Normal"+gs_name, ""]
     lst_t.extend(t_res.index.values)
     lst_n.extend(n_res.index.values)
     return [lst_t, lst_n]
@@ -88,11 +153,19 @@ def extract_mirnas_r(df, ss, gs_name=""):
 
 def main():
     # Running extract_mirnas_r
-    df, tar, grp, _ = data_reader.read_main(raw=True)
+    df, tar, grp, _, _ = data_reader.read_main(raw=True)
+    # Code for DS 4
+    """
+    missing = ['110608_TGCTCG_s_5', '110608_TGCTCG_s_1', '110608_TCGTCG_s_6', '110608_TCGTCG_s_5', '110602_TGCTCG_s_4', '110602_TGCTCG_s_3', '110602_TCGTCG_s_4', '110602_TCGTCG_s_3']
+    df = df.drop(missing)
+    tar = tar.drop(missing)
+    grp = grp.drop(missing)
+    #lst = extract_mirnas_r_guihasun(df, ss, gs_name="_4")
+    """
     ss = pd.DataFrame([tar, grp])
     ss = ss.rename({ss.axes[0][0]: 'groups', ss.axes[0][1]: 'block'}, axis='index').transpose()
     df = df.transpose()
-    lst = extract_mirnas_r(df, ss, gs_name="_7")
+    lst = extract_mirnas_r(df, ss, gs_name="_3")
 
     # Creating gmt file
     path = r'%s' % getcwd().replace('\\','/') + "/Out/"

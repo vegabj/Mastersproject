@@ -1,6 +1,10 @@
 import pandas as pd
 from os import getcwd, listdir
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import cm
+import matplotlib
+import heatmap
 
 path = r'%s' % getcwd().replace('\\','/') + "/Out/scores/"
 scores = listdir(path)
@@ -8,14 +12,20 @@ scores = listdir(path)
 print("Scores to analyze:")
 for i,score in enumerate(scores):
     print(i,score)
-select = int(input("Select: "))
+select = 0 #int(input("Select: "))
 print('\n\n')
 path = path + scores[select]
 df = pd.read_csv(path, index_col = 0)
 datasets = df.Dataset.unique()
 for i, dataset in enumerate(['All']+list(datasets)):
     print(i, dataset)
-selected_dataset = int(input("Select: "))
+selected_dataset = 0 #int(input("Select: "))
+
+# TODO: UI choices
+# Choose 1 dataset
+# Choose one scaling
+# Choose 1 Dataset
+# Choose one scaling
 
 test_sizes = ['0', '1', '2', '4', '8', '16', 'all']
 
@@ -56,25 +66,41 @@ test_sizes_n = [x+"N" for x in test_sizes]
 ds = [score_dict["none"], score_dict["standard"], score_dict["other"]]
 ext = ["colon_none_rf_es.pdf", "colon_standard_rf_es.pdf", "colon_closest_rf_es.pdf"]
 
-# Heatmap
-import matplotlib.pyplot as plt
-from matplotlib import cm
-import heatmap
-from utils import latexify
-latexify(columns=2) #fig_height=2.4*2 ,
+# latexify
+fig_width = 6.9
+fig_height = fig_width / 2.1
+params = {'backend': 'ps',
+          'text.latex.preamble': ['\\usepackage{gensymb}'],
+          'axes.labelsize': 8, # fontsize for x and y labels (was 10)
+          'axes.titlesize': 8,
+          'font.size': 8, # was 10
+          'legend.fontsize': 8, # was 10
+          'xtick.labelsize': 8,
+          'ytick.labelsize': 8,
+          'text.usetex': True,
+          'figure.figsize': [fig_width,fig_height*1.2],
+          'font.family': 'serif'
+}
 
-for i,d in enumerate(ds):
-    scores = np.array(d)
-    fig, ax = plt.subplots()
-    im, cbar = heatmap.heatmap(scores, test_sizes_p, test_sizes_n, ax=ax,
-                       vmin = 0.0, vmax = 1.0, cmap=cm.Reds, cbarlabel="score [AUC / Acc]")
-    texts = heatmap.annotate_heatmap(im, valfmt="{x:.2f}")
-
-    fig.tight_layout()
-    #plt.show()
-    fig.savefig("C:/Users/Vegard/Desktop/Master/Mastersproject/Plots/analyze/"+ext[i])
+matplotlib.rcParams.update(params)
 
 
-# 3D plot
-#from plot_3d import plot_3d
-#plot_3d(np.array(score_dict["overall"]), test_sizes_p, test_sizes_n)
+fig = plt.figure()
+ax1 = plt.subplot2grid((1,2), (0,0))
+scores_1 = np.array(ds[0])
+im, cbar = heatmap.heatmap(scores_1, test_sizes_p, test_sizes_n, ax=ax1,
+   vmin = 0.0, vmax = 1.0, cmap=cm.Reds)
+cbar.remove()
+texts = heatmap.annotate_heatmap(im, valfmt="{x:.2f}")
+ax2 = plt.subplot2grid((1,2), (0,1))
+scores_2 = np.array(ds[1])
+im, cbar = heatmap.heatmap(scores_2, test_sizes_p, test_sizes_n, ax=ax2,
+   vmin = 0.0, vmax = 1.0, cmap=cm.Reds, cbarlabel="score [AUC / Acc]")
+cbar.remove()
+texts = heatmap.annotate_heatmap(im, valfmt="{x:.2f}")
+
+cbar = fig.colorbar(im, ax=[ax1,ax2], orientation='horizontal', fraction=0.1, pad=-.8, panchor=False)
+cbar.ax.set_xlabel("score [AUC / Acc]", rotation=0, va='top')
+
+fig.tight_layout(pad=3.0, w_pad=4.5, h_pad=0.1)
+plt.show()

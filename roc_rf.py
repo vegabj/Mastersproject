@@ -4,20 +4,48 @@ import data_reader
 import df_utils
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import roc_curve, auc, roc_auc_score
 import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedKFold
 from scipy import interp
 import scaler as MiRNAScaler
+from sklearn.neighbors import KNeighborsClassifier
 
 # Import data
-df, target, group, lengths = data_reader.read_main(raw=False, es=True)
+df, target, group, lengths, es = data_reader.read_main(raw=False)
+# Add ES to df
+df = pd.concat([df, es], axis=1)
 #df = df[['Normal_3', 'Normal_5', 'Normal_7', 'Tumor_3', 'Tumor_5', 'Tumor_7']]
 
 
 # Scale data
-scales, values = MiRNAScaler.set_scales(df, lengths)
+#scales, values = MiRNAScaler.set_scales(df, lengths)
 X = MiRNAScaler.set_scaler(df, lengths)
+print(X.shape)
+
+# Transform labels to real values
+y = target
+y = np.array([0 if l == 'Normal' else 1 if l == 'Tumor' else 2 for l in y])
+
+# Feature selection ?
+"""
+from sklearn.svm import LinearSVC, SVR
+from sklearn.feature_selection import SelectFromModel, RFECV
+#lsvc = LinearSVC(C=0.01, penalty="l1", dual=False).fit(X, target)
+#model = SelectFromModel(lsvc, prefit=True)
+#X = model.transform(X)
+# TODO Test with rf regressor
+estimator = RandomForestClassifier(n_estimators = 200)
+selector = RFECV(estimator, step=1, cv=5)
+
+selector = selector.fit(X, y)
+X = selector.transform(X)
+print(X.shape[1])
+# 0.93+/- 0.05
+# 0.93+/- 0.05
+# 0.93+/- 0.04
+"""
+
 
 # Set seed for reproducability
 np.random.seed(0)
@@ -32,6 +60,7 @@ y = np.array([0 if l == 'Normal' else 1 if l == 'Tumor' else 2 for l in y])
 
 cv = StratifiedKFold(n_splits=10)
 classifier = RandomForestClassifier(n_estimators = 200)
+#classifier = KNeighborsClassifier()
 
 tprs = []
 aucs = []
@@ -41,6 +70,8 @@ i = 0
 for train, test in cv.split(X, y):
     # Get class probabilities for test set
     probas_ = classifier.fit(X[train], y[train]).predict_proba(X[test])
+    #print(roc_auc_score(y[test], probas_[:, 1]))
+    #scores_class = np.array([1 if s > 0.5 else 0 for s in probas_[:, 1]])
     # Compute ROC curve and area the curve
     fpr, tpr, thresholds = roc_curve(y[test], probas_[:, 1])
     tprs.append(interp(mean_fpr, fpr, tpr))

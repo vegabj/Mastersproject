@@ -5,7 +5,7 @@ import data_reader
 import scaler as MiRNAScaler
 
 # Import data
-df, tar, grp, _ = data_reader.read_main()
+df, tar, grp, _, _ = data_reader.read_main()
 
 
 # Scale data
