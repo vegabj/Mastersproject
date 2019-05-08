@@ -1,3 +1,9 @@
+"""
+Vegard Bjørgan 2019
+
+util functions
+"""
+
 # Cache for functions
 from functools import wraps
 def cache(func):

@@ -1,3 +1,10 @@
+"""
+Vegard Bjørgan 2019
+
+Code adapted from:
+https://gist.github.com/WillKoehrsen/ff77f5f308362819805a3defd9495ffd
+"""
+
 from sklearn.tree import export_graphviz
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -14,11 +21,8 @@ def visualize(estimator, path, feature_names, target_names, name='tree'):
                     class_names = target_names,
                     rounded = True,
                     precision = 2, filled = True)
-    # Seems to demand manual override to remove "samples and values"
 
-    # Convert to png using system command (requires Graphviz)
-    #for pdf: dot -Tpdf graph1.dot -o graph1.pdf
-    #call(['dot', '-Tpng', path+name+'.dot', '-o', path+name+'.png', '-Gdpi=600'])
+    # Convert to pdf using system command (requires Graphviz)
     call(['dot', '-Tpdf', path+name+'.dot', '-o', path+name+'.pdf'])
 
     # Display in matplotlib
@@ -42,10 +46,3 @@ def visualize_test():
     visualize(estimator, path, iris.feature_names, iris.target_names, name='treetest')
 
 #visualize_test()
-'''
-import visualize_decision_tree
-path = r'%s' % getcwd().replace('\\','/') + "/Out/images/"
-for i, est in enumerate(classifier.estimators_):
-    visualize_decision_tree.visualize(est, path, features, target, name=str(i))
-x = input("Finished!")
-'''

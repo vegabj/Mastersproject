@@ -1,28 +1,26 @@
-'''
-Vegard Bjørgan 2018
+"""
+Vegard Bjørgan 2019
 
 Generator for score spreadsheet enrichment score
-'''
+Data sets are selected in user interface
+file name must be manually set
+the sheet is saved to /Out/scores/
+"""
+
 import numpy as np
 import pandas as pd
 import data_reader
 import df_utils
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import roc_auc_score, recall_score, precision_score
-from sklearn.metrics import accuracy_score, balanced_accuracy_score, f1_score
+from sklearn.metrics import roc_auc_score, accuracy_score, balanced_accuracy_score
 from os import getcwd
 import scaler as MiRNAScaler
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from tqdm import tqdm
 from sklearn.model_selection import GridSearchCV
-from sklearn.ensemble import BaggingClassifier
 from sklearn import svm
-import warnings
 
-# TODO: Fix warnings from using f1_score, balanced_accuracy_score etc
-warnings.filterwarnings("ignore")
-
-file_name = "Scores_hepmark_es_svm"
+file_name = "Scores_colon_es_svm"
 
 """
 params: es_df - df with enrichment scores
@@ -72,8 +70,8 @@ np.random.seed(0)
 
 # Run scoring
 test_sizes = [0, 1, 2, 4, 8, 16, 'all']
-out_df = pd.DataFrame(columns=["P", "N", "Dataset", "Precision", "Recall",
-    "F1 score", "ROC(auc)", "Accuracy", "Balanced accuracy", "Iteration", "Normalization"])
+out_df = pd.DataFrame(columns=["P", "N", "Dataset", "ROC(auc)", "Accuracy"
+    , "Balanced accuracy", "Iteration", "Normalization"])
 
 # ES
 es_dropped = None
@@ -96,14 +94,9 @@ for idx, length in enumerate(lengths):
     X_train = df.drop(X_test.index)
     y_train = X_train.loc[:, "target"]
 
-    # Scale training data
-    #scales, values = MiRNAScaler.set_scales(X_train.loc[:, features], lengths[:idx] + lengths[idx+1:])
-    #X_train = MiRNAScaler.set_scaler(X_train.loc[:, features], lengths[:idx] + lengths[idx+1:])
-    # ES
     es_test = es.tail(len(es)-current_length).head(length)
     es_train = es.drop(es_test.index)
     X_train = np.concatenate((X_train, es_train.values), axis=1)
-
 
     classifier = svm.SVC(probability=True)
     classifier.fit(es_train, y_train)
@@ -118,7 +111,6 @@ for idx, length in enumerate(lengths):
                 es_val = es_test.loc[df_val.index]
 
                 # Do performance
-                #scores = score_es(es_val, bias=0.3)
                 scores = classifier.predict_proba(es_val)[:, 1]
                 if (P in test_sizes[2:] and N in test_sizes[2:]):
                     roc = roc_auc_score(y_test, scores)
@@ -126,12 +118,13 @@ for idx, length in enumerate(lengths):
                     roc = "N/A"
                 scores_class = np.array([1 if s > 0.5 else 0 for s in scores])
                 acc = accuracy_score(y_test, scores_class)
-                precision = precision_score(y_test, scores_class)
-                recall = recall_score(y_test, scores_class)
+                if (P in test_sizes[1:] and N in test_sizes[1:]):
+                    balanced_acc = balanced_accuracy_score(y_test, scores_class)
+                else:
+                    balanced_acc = acc
                 balanced_acc = balanced_accuracy_score(y_test, scores_class)
-                f1 = f1_score(y_test, scores_class)
-                out_df = out_df.append({"P": P, "N": N, "Dataset": DS, "Precision": precision
-                    , "Recall": recall, "F1 score": f1, "ROC(auc)": roc, "Accuracy": acc, "Balanced accuracy": balanced_acc, "Iteration": i
+                out_df = out_df.append({"P": P, "N": N, "Dataset": DS, "ROC(auc)": roc
+                    , "Accuracy": acc, "Balanced accuracy": balanced_acc, "Iteration": i
                     , "Normalization": "N/A"} , ignore_index = True)
 
 # Save scores to file

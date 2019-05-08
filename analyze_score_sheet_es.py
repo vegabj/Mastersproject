@@ -1,10 +1,21 @@
+"""
+Vegard Bjørgan 2019
+
+analyze score sheet generates a heatmap for enrichment score sheets
+"""
+
 import pandas as pd
 from os import getcwd, listdir
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import cm
+import heatmap
+from utils import latexify
 
 path = r'%s' % getcwd().replace('\\','/') + "/Out/scores/"
 scores = listdir(path)
-# Simples ui choice for selecting score dataset
+
+# Simples user interface for selecting score sheet
 print("Scores to analyze:")
 for i,score in enumerate(scores):
     print(i,score)
@@ -19,6 +30,7 @@ selected_dataset = int(input("Select: "))
 
 test_sizes = ['0', '1', '2', '4', '8', '16', 'all']
 
+# Gather scores for each tile in the heatmap
 score_dict = {"es_score": []}
 for P in test_sizes:
     es_score_n = []
@@ -38,13 +50,10 @@ test_sizes_p = [x+"P" for x in test_sizes]
 test_sizes_n = [x+"N" for x in test_sizes]
 ext = "hepmark_es_svm_"+str(selected_dataset-1)+".pdf" if selected_dataset else "hepmark_es_svm.pdf"
 
-# Heatmap
-import matplotlib.pyplot as plt
-from matplotlib import cm
-import heatmap
-from utils import latexify
-latexify(columns=2) #fig_height=2.4*2 ,
+# Uncomment to Latexify the heatmap
+#latexify(columns=2)
 
+# Generate a Heatmap
 scores = np.array(score_dict["es_score"])
 fig, ax = plt.subplots()
 im, cbar = heatmap.heatmap(scores, test_sizes_p, test_sizes_n, ax=ax,
@@ -52,5 +61,5 @@ im, cbar = heatmap.heatmap(scores, test_sizes_p, test_sizes_n, ax=ax,
 texts = heatmap.annotate_heatmap(im, valfmt="{x:.2f}")
 
 fig.tight_layout()
-#plt.show()
+plt.show()
 fig.savefig("C:/Users/Vegard/Desktop/Master/Mastersproject/Plots/analyze/"+ext)

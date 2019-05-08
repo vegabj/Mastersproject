@@ -1,13 +1,17 @@
-'''
-Vegard Bjørgan 2018
+"""
+Vegard Bjørgan 2019
 
-reader for data files
-'''
+Readers for data sets.
+
+read_main() is used in most cases as it includes all functionality to extract raw data,
+log transformed data and enrichment scores for each data set through a user interface.
+"""
 
 import pandas as pd
 import numpy as np
 from os import getcwd
 import df_utils
+import warnings
 
 def get_sets():
 	return ["Hepmark_Microarray", "Hepmark_Tissue", "Hepmark_Paired_Tissue",
@@ -20,16 +24,16 @@ Hepmark
 
 def read_hepmark_microarray():
 	path = r'%s' % getcwd().replace('\\','/')
-	sampleSheet = path + "/Data/Hepmark-Microarray/SampleSheet-Hepmark-Microarray.txt"
+	samplesheet_path = path + "/Data/Hepmark-Microarray/SampleSheet-Hepmark-Microarray.txt"
 	path = path + "/Data/Hepmark-Microarray/Hepmark-Microarray.csv"
 	df = pd.read_csv(path, sep="\t").transpose()
-	df2 = pd.read_csv(sampleSheet, sep='\t', usecols=['Type', 'Code'])
+	samplesheet = pd.read_csv(samplesheet_path, sep='\t', usecols=['Type', 'Code'])
 	df = df.dropna()
 	df = df.drop(['509-1-4'])
-	df2 = df2.drop(['509-1-4'])
+	samplesheet = samplesheet.drop(['509-1-4'])
 	df.index = ["X"+ix for ix in df.index]
-	df2.index = ["X"+ix for ix in df2.index]
-	return df, df2.loc[:, 'Type'], df2.loc[:, 'Code']
+	samplesheet.index = ["X"+ix for ix in samplesheet.index]
+	return df, samplesheet.loc[:, 'Type'], samplesheet.loc[:, 'Code']
 
 
 def read_hepmark_tissue():
@@ -45,16 +49,16 @@ def read_hepmark_tissue():
 	type = ['Tumor' if idx in sampleSheetDf.loc[:, 'Tumor'].values
 			else 'Normal' if idx in sampleSheetDf.loc[:, 'Normal'].values
 			else 'Undefined' for idx in index]
-	df2 = pd.DataFrame({'type': type}, index=index)
-	df2['group'] = [sampleSheetDf.index[sampleSheetDf['Normal'] == id][0]
+	samplesheet = pd.DataFrame({'type': type}, index=index)
+	samplesheet['group'] = [sampleSheetDf.index[sampleSheetDf['Normal'] == id][0]
 					if not sampleSheetDf.index[sampleSheetDf['Normal'] == id].empty
 					else sampleSheetDf.index[sampleSheetDf['Tumor'] == id][0]
-					for id in df2.axes[0]]
+					for id in samplesheet.axes[0]]
 	# NB: Samplesheet and MatureMatrix missmatch
-	df2 = df2.drop(['XXXX', 'ta-164'])
+	samplesheet = samplesheet.drop(['XXXX', 'ta-164'])
 	df = df.drop(['na144_2', 'na-164'])
 
-	return df, df2.loc[:, 'type'], df2.loc[:, 'group']
+	return df, samplesheet.loc[:, 'type'], samplesheet.loc[:, 'group']
 
 def read_hepmark_tissue_formatted():
 	path = r'%s' % getcwd().replace('\\','/')
@@ -68,13 +72,13 @@ def read_hepmark_tissue_formatted():
 	type = ['Tumor' if idx in sampleSheetDf.loc[:, 'Tumor'].values
 			else 'Normal' if idx in sampleSheetDf.loc[:, 'Normal'].values
 			else 'Undefined' for idx in index]
-	df2 = pd.DataFrame({'type': type}, index=index)
-	df2['group'] = [sampleSheetDf.index[sampleSheetDf['Normal'] == id][0]
+	samplesheet = pd.DataFrame({'type': type}, index=index)
+	samplesheet['group'] = [sampleSheetDf.index[sampleSheetDf['Normal'] == id][0]
 					if not sampleSheetDf.index[sampleSheetDf['Normal'] == id].empty
 					else sampleSheetDf.index[sampleSheetDf['Tumor'] == id][0]
-					for id in df2.axes[0]]
-	df2 = df2.drop(['XXXX', 'ta-164', 'ta157', 'tb140']) # 2 missmatch and 2 bad samples
-	return df, df2.loc[:, 'type'], df2.loc[:, 'group']
+					for id in samplesheet.axes[0]]
+	samplesheet = samplesheet.drop(['XXXX', 'ta-164', 'ta157', 'tb140']) # 2 missmatch and 2 bad samples
+	return df, samplesheet.loc[:, 'type'], samplesheet.loc[:, 'group']
 
 
 def read_hepmark_paired_tissue():
@@ -149,7 +153,7 @@ def read_guihuaSun_PMID_26646696():
 
 	return df, sampleSheet.loc[:, 'Diease'], sampleSheet.loc[:, 'group']
 
-def read_guihuaSun_PMID_26646696_colon():
+def read_guihuaSun_PMID_26646696_formatted():
 	path = r'%s' % getcwd().replace('\\','/')
 	path = path + "/Data/ColonCancer/GuihuaSun-PMID_26646696/"
 	analyses = path + "analyses/MatureMatrixFormatted.csv"
@@ -179,7 +183,7 @@ def read_publicCRC_GSE46622():
 	sampleSheet = sampleSheet.ix[df.index]
 	return df, sampleSheet.loc[:, 'disease_state_s'], sampleSheet.loc[:, 'subject_s']
 
-def read_publicCRC_GSE46622_colon():
+def read_publicCRC_GSE46622_formatted():
 	path = r'%s' % getcwd().replace('\\','/')
 	path = path + "/Data/ColonCancer/PublicCRC_GSE46622/"
 	analyses = path + "analyses/MatureMatrixFormatted.csv"
@@ -206,7 +210,7 @@ def read_publicCRC_PMID_23824282():
 	df = df.loc[sampleSheet.index]
 	return df, ['Tumor' for i in range(len(df))], [i for i in range(len(df))]
 
-def read_publicCRC_PMID_23824282_colon():
+def read_publicCRC_PMID_23824282_formatted():
 	path = r'%s' % getcwd().replace('\\','/')
 	analyses = path + "/Data/ColonCancer/PublicCRC_PMID_23824282/analyses/MatureMatrixFormatted.csv"
 	df = pd.read_csv(analyses, index_col=0).transpose()
@@ -239,7 +243,7 @@ def read_publicCRC_PMID_26436952():
 
 	return df, sampleSheet.loc[:, 'tumor_type'], sampleSheet.loc[:, 'subject_alias']
 
-def read_publicCRC_PMID_26436952_colon():
+def read_publicCRC_PMID_26436952_formatted():
 	path = r'%s' % getcwd().replace('\\','/')
 	path = path + "/Data/ColonCancer/PublicCRC_PMID_26436952/"
 	analyses = path + "analyses/MatureMatrixFormatted.csv"
@@ -268,39 +272,33 @@ Enrichement_scores
 def read_enrichment_hepmark_microarray():
 	path = r'%s' % getcwd().replace('\\','/') + "/Out/enrichment_scores/es_hepmark_microarray.csv"
 	df = pd.read_csv(path, index_col = 0)
-	#df.drop(['Normal_0', 'Tumor_0'], axis=1)
 	return df
 
 def read_enrichment_hepmark_tissue():
 	path = r'%s' % getcwd().replace('\\','/') + "/Out/enrichment_scores/es_hepmark_tissue.csv"
 	df = pd.read_csv(path, index_col = 0)
-	#df = df.drop(['Normal_1', 'Tumor_1'], axis=1)
 	df = df.drop(['ta157', 'tb140'])
 	return df
 
 def read_enrichment_hepmark_paired_tissue():
 	path = r'%s' % getcwd().replace('\\','/') + "/Out/enrichment_scores/es_hepmark_paired_tissue.csv"
 	df = pd.read_csv(path, index_col = 0)
-	#df = df.drop(['Normal_2', 'Tumor_2'], axis=1)
 	return df
 
 def read_enrichment_colon():
 	path = r'%s' % getcwd().replace('\\','/') + "/Out/enrichment_scores/es_colon.csv"
 	df = pd.read_csv(path, index_col = 0)
-	#df = df.drop(['Normal_3', 'Tumor_3'], axis=1)
 	return df
 
 def read_enrichment_guihuasun():
 	path = r'%s' % getcwd().replace('\\','/') + "/Out/enrichment_scores/es_guihuasun.csv"
 	df = pd.read_csv(path, index_col = 0)
 	df.index = ["X"+ix for ix in df.index]
-	#df = df.drop(['Normal_4', 'Tumor_4'], axis=1)
 	return df
 
 def read_enrichment_gse46622():
 	path = r'%s' % getcwd().replace('\\','/') + "/Out/enrichment_scores/es_gse46622.csv"
 	df = pd.read_csv(path, index_col = 0)
-	#df = df.drop(['Normal_5', 'Tumor_5'], axis=1)
 	return df
 
 def read_enrichment_PMID_23824282():
@@ -311,7 +309,6 @@ def read_enrichment_PMID_23824282():
 def read_enrichment_PMID_26436952():
 	path = r'%s' % getcwd().replace('\\','/') + "/Out/enrichment_scores/es_PMID_26436952.csv"
 	df = pd.read_csv(path, index_col = 0)
-	#df = df.drop(['Normal_7', 'Tumor_7'], axis=1)
 	return df
 
 
@@ -329,13 +326,13 @@ def read_number(i):
 	elif i == 3:
 		return read_coloncancer_GCF_2014_295_formatted()
 	elif i == 4:
-		return read_guihuaSun_PMID_26646696_colon()
+		return read_guihuaSun_PMID_26646696_formatted()
 	elif i == 5:
-		return read_publicCRC_GSE46622_colon()
+		return read_publicCRC_GSE46622_formatted()
 	elif i == 6:
-		return read_publicCRC_PMID_23824282_colon()
+		return read_publicCRC_PMID_23824282_formatted()
 	elif i == 7:
-		return read_publicCRC_PMID_26436952_colon()
+		return read_publicCRC_PMID_26436952_formatted()
 
 
 def read_number_raw(i):
@@ -386,8 +383,16 @@ def read_main(raw=False):
 	if multi_select:
 		dfs, target, group, es = [], [], [], []
 		for select in selected:
-			df, tar, grp = read_number_raw(int(select)) if raw else read_number(int(select))
-			es_df = read_es(int(select))
+			try:
+				df, tar, grp = read_number_raw(int(select)) if raw else read_number(int(select))
+			except OSError as e:
+				warnings.warn("Dataset "+names[int(select)]+" was not found")
+				continue
+			try:
+				es_df = read_es(int(select))
+			except OSError as e:
+				warnings.warn("Enrichment score for dataset "+names[int(select)]+" was not found")
+				es_df = pd.DataFrame({'A': [0]})
 			es.append(es_df)
 			dfs.append(df)
 			target.extend(tar)

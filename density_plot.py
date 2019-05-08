@@ -1,8 +1,8 @@
-'''
-Vegard Bjørgan 2018
+"""
+Vegard Bjørgan 2019
 
 density_plot.py makes simple density plot of row data
-'''
+"""
 
 import seaborn as sns
 from matplotlib import pyplot as plt

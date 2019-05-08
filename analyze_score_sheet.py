@@ -1,10 +1,21 @@
+"""
+Vegard Bjørgan 2019
+
+analyze score sheet generates a heatmap per normalization
+"""
+
 import pandas as pd
 from os import getcwd, listdir
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import cm
+import heatmap
+from utils import latexify
 
 path = r'%s' % getcwd().replace('\\','/') + "/Out/scores/"
 scores = listdir(path)
-# Simples ui choice for selecting score dataset
+
+# Simples user interface for selecting score sheet
 print("Scores to analyze:")
 for i,score in enumerate(scores):
     print(i,score)
@@ -19,18 +30,18 @@ selected_dataset = int(input("Select: "))
 
 test_sizes = ['0', '1', '2', '4', '8', '16', 'all']
 
+# Gather scores for each tile in the heatmaps
 score_dict = {"none": [], "standard": [], "other": []}
 for P in test_sizes:
     none_n = []
     standard_n = []
     other_n = []
-    #others_n = []
     for N in test_sizes:
         select = df.loc[(df["P"] == P) & (df["N"] == N)]
         if selected_dataset:
             select = select.loc[select["Dataset"] == datasets[selected_dataset-1]]
         select_none = select.loc[df["Normalization"] == 'None']
-        select_standard = select.loc[df["Normalization"] == 'Standard']
+        select_standard = select.loc[df["Normalization"] == 'MinMax']
         select_other = select.loc[df["Normalization"] == 'Closest']
         if P in test_sizes[2:] and N in test_sizes[2:]:
             overall = select.loc[:, "ROC(auc)"].mean()
@@ -56,13 +67,10 @@ test_sizes_n = [x+"N" for x in test_sizes]
 ds = [score_dict["none"], score_dict["standard"], score_dict["other"]]
 ext = ["colon_none_rf_es.pdf", "colon_standard_rf_es.pdf", "colon_closest_rf_es.pdf"]
 
-# Heatmap
-import matplotlib.pyplot as plt
-from matplotlib import cm
-import heatmap
-from utils import latexify
-latexify(columns=2) #fig_height=2.4*2 ,
+# Uncomment to Latexify the heatmap
+#latexify(columns=2)
 
+# Generate Heatmaps
 for i,d in enumerate(ds):
     scores = np.array(d)
     fig, ax = plt.subplots()
@@ -71,10 +79,5 @@ for i,d in enumerate(ds):
     texts = heatmap.annotate_heatmap(im, valfmt="{x:.2f}")
 
     fig.tight_layout()
-    #plt.show()
+    plt.show()
     fig.savefig("C:/Users/Vegard/Desktop/Master/Mastersproject/Plots/analyze/"+ext[i])
-
-
-# 3D plot
-#from plot_3d import plot_3d
-#plot_3d(np.array(score_dict["overall"]), test_sizes_p, test_sizes_n)

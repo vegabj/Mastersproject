@@ -1,26 +1,25 @@
-'''
-Vegard Bjørgan 2018
+"""
+Vegard Bjørgan 2019
 
 Generator for score spreadsheet
-'''
+Data sets are selected in user interface
+file name must be manually set
+the sheet is saved to /Out/scores/
+"""
+
 import numpy as np
 import pandas as pd
 import data_reader
 import df_utils
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import roc_auc_score, recall_score, precision_score
-from sklearn.metrics import accuracy_score, balanced_accuracy_score, f1_score
+from sklearn.metrics import roc_auc_score, accuracy_score, balanced_accuracy_score
 from os import getcwd
 import scaler as MiRNAScaler
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from tqdm import tqdm
 from sklearn.model_selection import GridSearchCV
-from sklearn.ensemble import BaggingClassifier
 from sklearn import svm
-import warnings
 
-# TODO: Fix warnings from using f1_score, balanced_accuracy_score etc
-warnings.filterwarnings("ignore")
 
 file_name = "Scores_colon_rf"
 use_enrichment_score = False
@@ -72,19 +71,20 @@ df["target"] = y
 np.random.seed(0)
 
 # Setup classifier
-'''
 tuned_parameters = {'kernel': ['rbf'], 'gamma': [0.01, 1e-3, 0.002, 0.003, 0.005, 0.004, 0.006, 1e-4],
                      'C': [0.1, 1, 10, 100]}
-classifier = GridSearchCV(svm.SVC(probability=True), tuned_parameters, cv=3, scoring='roc_auc')
 
-classifier = BaggingClassifier(base_estimator=svm.SVC(kernel='rbf', gamma='auto', probability=True), n_estimators=100, max_samples=1.0, max_features=1.0, random_state = 0)
 '''
-classifier = RandomForestClassifier(n_estimators = 200)
+classifier_none = GridSearchCV(svm.SVC(probability=True), tuned_parameters, cv=3, scoring='roc_auc')
+classifier_minmax = GridSearchCV(svm.SVC(probability=True), tuned_parameters, cv=3, scoring='roc_auc')
+'''
+classifier_none = RandomForestClassifier(n_estimators = 200)
+classifier_minmax = RandomForestClassifier(n_estimators = 200)
 
 # Run scoring
 test_sizes = [0, 1, 2, 4, 8, 16, 'all']
-out_df = pd.DataFrame(columns=["P", "N", "Dataset", "Precision", "Recall",
-    "F1 score", "ROC(auc)", "Accuracy", "Balanced accuracy", "Iteration", "Normalization"])
+out_df = pd.DataFrame(columns=["P", "N", "Dataset", "ROC(auc)", "Accuracy"
+    , "Balanced accuracy", "Iteration", "Normalization"])
 
 # ES
 es_dropped = None
@@ -108,17 +108,19 @@ for idx, length in enumerate(lengths):
     y_train = X_train.loc[:, "target"]
 
     # Scale training data
+    X_train_none = X_train.loc[:, features]
     scales, values = MiRNAScaler.set_scales(X_train.loc[:, features], lengths[:idx] + lengths[idx+1:])
-    X_train = MiRNAScaler.set_scaler(X_train.loc[:, features], lengths[:idx] + lengths[idx+1:])
+    X_train_minmax = MiRNAScaler.set_scaler(X_train.loc[:, features], lengths[:idx] + lengths[idx+1:])
     # ES
     # Add es_scores to X_train and X_test
     if use_enrichment_score:
         es_test = es.tail(len(es)-current_length).head(length)
         es_train = es.drop(es_test.index)
-        X_train = np.concatenate((X_train, es_train.values), axis=1)
+        X_train_minmax = np.concatenate((X_train, es_train.values), axis=1)
 
-    # Fit classifier
-    classifier.fit(X_train, y_train)
+    # Fit classifiers
+    classifier_none.fit(X_train_none, y_train)
+    classifier_minmax.fit(X_train_minmax, y_train)
 
     current_length += length
     for P in tqdm(test_sizes):
@@ -132,8 +134,8 @@ for idx, length in enumerate(lengths):
                 # Normalization strategy
                 for ii in range(3):
                     if ii == 0:
-                        normalization = "Standard"
-                        df_val_final = StandardScaler().fit_transform(df_val.values)
+                        normalization = "MinMax"
+                        df_val_final = MinMaxScaler((-1,1)).fit_transform(df_val.values)
                     if ii == 1:
                         normalization = "None"
                         df_val_final = df_val.values
@@ -153,19 +155,22 @@ for idx, length in enumerate(lengths):
                         df_val_final = np.concatenate((df_val_final, es_val.values), axis=1)
 
                     # Do performance
-                    scores = classifier.predict_proba(df_val_final)[:, 1]
+                    if ii == 1:
+                        scores = classifier_none.predict_proba(df_val_final)[:, 1]
+                    else:
+                        scores = classifier_minmax.predict_proba(df_val_final)[:, 1]
                     if (P in test_sizes[2:] and N in test_sizes[2:]):
                         roc = roc_auc_score(y_test, scores)
                     else:
                         roc = "N/A"
                     scores_class = np.array([1 if s > 0.5 else 0 for s in scores])
                     acc = accuracy_score(y_test, scores_class)
-                    precision = precision_score(y_test, scores_class)
-                    recall = recall_score(y_test, scores_class)
-                    balanced_acc = balanced_accuracy_score(y_test, scores_class)
-                    f1 = f1_score(y_test, scores_class)
-                    out_df = out_df.append({"P": P, "N": N, "Dataset": DS, "Precision": precision
-                        , "Recall": recall, "F1 score": f1, "ROC(auc)": roc, "Accuracy": acc, "Balanced accuracy": balanced_acc, "Iteration": i
+                    if (P in test_sizes[1:] and N in test_sizes[1:]):
+                        balanced_acc = balanced_accuracy_score(y_test, scores_class)
+                    else:
+                        balanced_acc = acc
+                    out_df = out_df.append({"P": P, "N": N, "Dataset": DS, "ROC(auc)": roc
+                        , "Accuracy": acc, "Balanced accuracy": balanced_acc, "Iteration": i
                         , "Normalization": normalization} , ignore_index = True)
 
 # Save scores to file

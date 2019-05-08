@@ -1,8 +1,13 @@
+"""
+Vegard Bjørgan 2019
+
+Creates an interactive scatter plot of pca components
+"""
+
 from matplotlib import pyplot as plt
 from matplotlib.text import Annotation
 from matplotlib.lines import Line2D
 import matplotlib
-import random
 
 # Method for putting text next to elements
 def annotate(axis, text, x, y):
@@ -10,6 +15,7 @@ def annotate(axis, text, x, y):
     axis.add_artist(text_annotation)
 
 
+# Method for making the standard scatter plot
 def pca_scatter(finalDf, multi_select, lengths):
     matplotlib.rcParams.update(matplotlib.rcParamsDefault)
     fig = plt.figure(figsize = (10,10))
@@ -25,15 +31,15 @@ def pca_scatter(finalDf, multi_select, lengths):
     if multi_select:
         markers = ['v', '^', 'o', 's', 'D', '*', '.']
         legend_elements = [Line2D([0], [0], marker ='o', color='w', label = 'Normal'
-                            , markerfacecolor='r', markersize=10)
+                            , markerfacecolor='b', markersize=10)
                         , Line2D([0], [0], marker ='o', color='w', label = 'Tumor'
-                            , markerfacecolor='b', markersize=10)]
+                            , markerfacecolor='r', markersize=10)]
 
         temp_df = finalDf
 
         for i, length in enumerate(lengths):
             currentDf = temp_df.head(length)
-            color = ['b' if tar == 'Tumor' else 'r' if tar == 'Normal' else 'g' for tar in currentDf.target.values]
+            color = ['r' if tar == 'Tumor' else 'b' if tar == 'Normal' else 'g' for tar in currentDf.target.values]
             s = ax.scatter(currentDf['principal component 1'].values
                        , currentDf['principal component 2'].values
                        , c = color
@@ -48,9 +54,7 @@ def pca_scatter(finalDf, multi_select, lengths):
             temp_df = temp_df.drop(currentDf.index)
 
     else:
-        color = ['b' if tar == 'Tumor' else 'r' if tar == 'Normal' else 'g' for tar in finalDf.target.values]
-        #randList = [random.randint(0,1) for x in range(len(color))]
-        #edgecolors = ['g' if i == 1 else 'r' for i in randList]
+        color = ['r' if tar == 'Tumor' else 'b' if tar == 'Normal' else 'g' for tar in finalDf.target.values]
 
         s = ax.scatter(finalDf['principal component 1'].values
                    , finalDf['principal component 2'].values
@@ -58,13 +62,12 @@ def pca_scatter(finalDf, multi_select, lengths):
                    , s = 50
                    , picker = True)
                    #, edgecolors = edgecolors)
-                   # TODO Edgecolors to array of predictions
 
         # Create custom legend elements
         legend_elements = [Line2D([0], [0], marker ='o', color='w', label = 'Normal'
-                            , markerfacecolor='r', markersize=10)
+                            , markerfacecolor='b', markersize=10)
                         , Line2D([0], [0], marker ='o', color='w', label = 'Tumor'
-                            , markerfacecolor='b', markersize=10)]
+                            , markerfacecolor='r', markersize=10)]
         plots[s] = finalDf
 
     ax.legend(handles=legend_elements)
@@ -96,27 +99,8 @@ def pca_scatter(finalDf, multi_select, lengths):
 
     plt.show()
 
-    '''
-    # Copy of code above shows principal components 3 & 4
-    fig = plt.figure(figsize = (10,10))
-    ax = fig.add_subplot(1,1,1)
-    ax.set_xlabel('Principal Component 3', fontsize = 15)
-    ax.set_ylabel('Principal Component 4', fontsize = 15)
-    ax.set_title('2 component PCA', fontsize = 20)
-    #color = ['g' if tar == 'Tumor' else 'r' for tar in finalDf.target.values]
-    ax.scatter(finalDf['principal component 3'].values
-               , finalDf['principal component 4'].values
-               , c = color
-               , s = 50
-               , picker = True)
-    ax.legend(handles=legend_elements)
-    ax.grid()
-    fig.canvas.mpl_connect('pick_event', onpick)
 
-    plt.show()
-    '''
-
-# Method for better plots in report
+# Method for better plots in latex report
 def pca_scatter_latex(finalDf, finalDf_2, multi_select, lengths):
     fig_width = 6.9
     fig_height = fig_width / 2
@@ -146,15 +130,15 @@ def pca_scatter_latex(finalDf, finalDf_2, multi_select, lengths):
     if multi_select:
         markers = ['v', '^', 'o', 's', 'D']
         legend_elements = [Line2D([0], [0], marker ='o', color='w', label = 'Normal'
-                            , markerfacecolor='r', markersize=8)
+                            , markerfacecolor='b', markersize=8)
                         , Line2D([0], [0], marker ='o', color='w', label = 'Tumor'
-                            , markerfacecolor='b', markersize=8)]
+                            , markerfacecolor='r', markersize=8)]
 
         temp_df = finalDf
 
         for i, length in enumerate(lengths):
             currentDf = temp_df.head(length)
-            color = ['b' if tar == 'Tumor' else 'r' if tar == 'Normal' else 'g' for tar in currentDf.target.values]
+            color = ['r' if tar == 'Tumor' else 'b' if tar == 'Normal' else 'g' for tar in currentDf.target.values]
             s = ax.scatter(currentDf['principal component 1'].values
                        , currentDf['principal component 2'].values
                        , c = color
@@ -162,13 +146,13 @@ def pca_scatter_latex(finalDf, finalDf_2, multi_select, lengths):
                        , marker = markers[i]
                        , picker = True)
             legend_elements.append(Line2D([0], [0], marker = markers[i], color='w'
-                                    , label = 'Data set '+str(i+1), markerfacecolor='b'
+                                    , label = 'Data set '+str(i+1), markerfacecolor='g'
                                     , markersize=8))
             plots[s] = currentDf
             temp_df = temp_df.drop(currentDf.index)
 
     else:
-        color = ['b' if tar == 'Tumor' else 'r' if tar == 'Normal' else 'g' for tar in finalDf.target.values]
+        color = ['r' if tar == 'Tumor' else 'b' if tar == 'Normal' else 'g' for tar in finalDf.target.values]
         s = ax.scatter(finalDf['principal component 1'].values
                    , finalDf['principal component 2'].values
                    , c = color
@@ -177,9 +161,9 @@ def pca_scatter_latex(finalDf, finalDf_2, multi_select, lengths):
 
         # Create custom legend elements
         legend_elements = [Line2D([0], [0], marker ='o', color='w', label = 'Normal'
-                            , markerfacecolor='r', markersize=8)
+                            , markerfacecolor='b', markersize=8)
                         , Line2D([0], [0], marker ='o', color='w', label = 'Tumor'
-                            , markerfacecolor='b', markersize=8)]
+                            , markerfacecolor='r', markersize=8)]
         plots[s] = finalDf
 
     ax.grid()
@@ -191,15 +175,15 @@ def pca_scatter_latex(finalDf, finalDf_2, multi_select, lengths):
     if multi_select:
         markers = ['v', '^', 'o', 's', 'D']
         legend_elements = [Line2D([0], [0], marker ='o', color='w', label = 'Normal'
-                            , markerfacecolor='r', markersize=8)
+                            , markerfacecolor='b', markersize=8)
                         , Line2D([0], [0], marker ='o', color='w', label = 'Tumor'
-                            , markerfacecolor='b', markersize=8)]
+                            , markerfacecolor='r', markersize=8)]
 
         temp_df = finalDf_2
 
         for i, length in enumerate(lengths):
             currentDf = temp_df.head(length)
-            color = ['b' if tar == 'Tumor' else 'r' if tar == 'Normal' else 'g' for tar in currentDf.target.values]
+            color = ['r' if tar == 'Tumor' else 'b' if tar == 'Normal' else 'g' for tar in currentDf.target.values]
             s = ax.scatter(currentDf['principal component 1'].values
                        , currentDf['principal component 2'].values
                        , c = color
@@ -207,7 +191,7 @@ def pca_scatter_latex(finalDf, finalDf_2, multi_select, lengths):
                        , marker = markers[i]
                        , picker = True)
             legend_elements.append(Line2D([0], [0], marker = markers[i], color='w'
-                                    , label = 'Data set '+str(i+1), markerfacecolor='b'
+                                    , label = 'Data set '+str(i+1), markerfacecolor='g'
                                     , markersize=8))
             plots[s] = currentDf
             temp_df = temp_df.drop(currentDf.index)

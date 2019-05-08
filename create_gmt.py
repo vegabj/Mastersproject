@@ -1,9 +1,13 @@
-# Vegard B 2019
+"""
+Vegard Bjørgan 2019
+
+Create a gmt file or gene set to an existing gmt file
 
 # A gmt (Gene Matrix Transposed) is a file used by gsea to evaluate sequences and score
 # Column 1 Name of Test
 # Column 2 Test Description
-# Column 3-n miRNAs to check
+# Column 3-n miRNAs in the gene set
+"""
 
 import pandas as pd
 from os import getcwd
@@ -14,9 +18,10 @@ from rpy2.robjects import r, pandas2ri
 # Import necessary modules in R
 limma = importr('limma')
 edger = importr('edgeR')
-# Activates automatic conversion between pandas dataframes and R data frames
+# Activates automatic conversion between python dataframes and R dataframes
 pandas2ri.activate()
 
+# Creates the gmt file
 def create_gmt_file(lst, path, new=False):
     outframe = pd.DataFrame(lst)
     if new:
@@ -25,6 +30,7 @@ def create_gmt_file(lst, path, new=False):
         with open(path + "new_gmt.gmt", 'a') as f:
             outframe.to_csv(f, sep='\t', header=False, index=False)
 
+# Extracts the miRNAs from a dataframe that are higher expressed in both tumor and normal samples
 def extract_mirnas_r(df, ss, gs_name=""):
     # Setup R function
     r('''
@@ -33,8 +39,6 @@ def extract_mirnas_r(df, ss, gs_name=""):
             groups <- factor(sampleSheet$groups)
             block <- na.omit(factor(sampleSheet$block))
             design <- model.matrix(~ groups)
-            #print(block)
-            #print(design)
 
             count.mat <- DGEList(matrix)
             # table of counts (rows=features, columns=samples), group indicator for each column
@@ -48,7 +52,6 @@ def extract_mirnas_r(df, ss, gs_name=""):
             dup.cor <- duplicateCorrelation(count.voom, design=design, block=block)
             # Estimate the correlation between duplicate spots (regularly spaced replicate
             # spots on the same array) or between technical replicates from a series of arrays.
-            #print(dup.cor)
             fit <- lmFit(count.voom, design=design, block=block, correlation=dup.cor$consensus.correlation)
             # Fit linear model for each gene given a series of arrays
             fit <- eBayes(fit)
@@ -58,7 +61,6 @@ def extract_mirnas_r(df, ss, gs_name=""):
             topTab <- topTable(fit, coef=2, p.value=0.05, number="inf", sort.by="p")
             # Extract a table of the top-ranked genes from a linear model fit.
 
-            #print(topTab)
             return(topTab)
         }
         ''')
@@ -67,7 +69,7 @@ def extract_mirnas_r(df, ss, gs_name=""):
     r_f = r['f']
     # Run R function
     res = r_f(df, ss)
-    # Note: Convertion loses miRNAs as index, manually set.
+    # Note: Conversion loses miRNAs as index, so this is manually set.
     pd_res = pandas2ri.ri2py(res)
     index = [i for i in res.rownames]
     pd_res['index'] = index
@@ -82,7 +84,10 @@ def extract_mirnas_r(df, ss, gs_name=""):
     return [lst_t, lst_n]
 
 
-def extract_mirnas_r_guihasun(df, ss, gs_name=""):
+# Same as extract_mirnas_r but made specifically for data set GuihuaSun as it needs extra
+# information by using paired samples to find distinct separations between normal and tumor
+def extract_mirnas_r_guihuasun(df, ss, gs_name=""):
+    # Setup R functions
     r('''
         CreateDesign <- function(expressionMatrix, sampleSheet) {
             sampleSheet[sampleSheet == ""] <- NA
@@ -131,8 +136,10 @@ def extract_mirnas_r_guihasun(df, ss, gs_name=""):
             return(topTab)
         }
         ''')
+    # Make function bindings between R and python
     r_f = r['f']
 
+    # run R functions
     sampleSheet = r_create_samplesheet(df)
     designInfo = r_create_design(df, sampleSheet)
     res = r_f(df, ss, designInfo)
@@ -152,16 +159,19 @@ def extract_mirnas_r_guihasun(df, ss, gs_name=""):
 
 
 def main():
-    # Running extract_mirnas_r
+    # Reads in a data set
     df, tar, grp, _, _ = data_reader.read_main(raw=True)
-    # Code for DS 4
+
+    # Code for DS 4 (GuihuaSun)
     """
     missing = ['110608_TGCTCG_s_5', '110608_TGCTCG_s_1', '110608_TCGTCG_s_6', '110608_TCGTCG_s_5', '110602_TGCTCG_s_4', '110602_TGCTCG_s_3', '110602_TCGTCG_s_4', '110602_TCGTCG_s_3']
     df = df.drop(missing)
     tar = tar.drop(missing)
     grp = grp.drop(missing)
-    #lst = extract_mirnas_r_guihasun(df, ss, gs_name="_4")
+    #lst = extract_mirnas_r_guihuasun(df, ss, gs_name="_4")
     """
+
+    # Running extract_mirnas_r
     ss = pd.DataFrame([tar, grp])
     ss = ss.rename({ss.axes[0][0]: 'groups', ss.axes[0][1]: 'block'}, axis='index').transpose()
     df = df.transpose()

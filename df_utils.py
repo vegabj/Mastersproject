@@ -1,18 +1,20 @@
-'''
-Vegard Bjørgan 2018
+"""
+Vegard Bjørgan 2019
 
-pca_utils.py contains utilities for pca.py
-'''
+df_utils.py contains utilities for data frames
+"""
 
 import pandas as pd
 import numpy as np
 import data_reader
 from os import getcwd
 
-def merge_frames(dfs):
+def merge_frames(dfs, drop=True):
     df = pd.concat(dfs, axis = 0, sort=False)
-    #df = df.dropna(axis=1)
-    df = df.fillna(-1)
+    if drop:
+        df = df.dropna(axis=1)
+    else:
+        df = df.fillna(-1)
     return df
 
 

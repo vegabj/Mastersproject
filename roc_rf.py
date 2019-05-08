@@ -1,3 +1,6 @@
+"""
+Vegard Bjørgan 2019
+"""
 import numpy as np
 import pandas as pd
 import data_reader
@@ -7,44 +10,34 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_curve, auc, roc_auc_score
 import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import GridSearchCV
 from scipy import interp
 import scaler as MiRNAScaler
 from sklearn.neighbors import KNeighborsClassifier
+from utils import latexify
+from sklearn.feature_selection import RFECV
 
 # Import data
 df, target, group, lengths, es = data_reader.read_main(raw=False)
-# Add ES to df
-df = pd.concat([df, es], axis=1)
-#df = df[['Normal_3', 'Normal_5', 'Normal_7', 'Tumor_3', 'Tumor_5', 'Tumor_7']]
 
 
 # Scale data
-#scales, values = MiRNAScaler.set_scales(df, lengths)
-X = MiRNAScaler.set_scaler(df, lengths)
+X = MiRNAScaler.choose_scaling(df, lengths)
 print(X.shape)
 
 # Transform labels to real values
 y = target
 y = np.array([0 if l == 'Normal' else 1 if l == 'Tumor' else 2 for l in y])
 
-# Feature selection ?
-"""
-from sklearn.svm import LinearSVC, SVR
-from sklearn.feature_selection import SelectFromModel, RFECV
 #lsvc = LinearSVC(C=0.01, penalty="l1", dual=False).fit(X, target)
 #model = SelectFromModel(lsvc, prefit=True)
 #X = model.transform(X)
-# TODO Test with rf regressor
-estimator = RandomForestClassifier(n_estimators = 200)
-selector = RFECV(estimator, step=1, cv=5)
 
-selector = selector.fit(X, y)
-X = selector.transform(X)
-print(X.shape[1])
+estimator = RandomForestClassifier(n_estimators = 100)
 # 0.93+/- 0.05
 # 0.93+/- 0.05
 # 0.93+/- 0.04
-"""
+
 
 
 # Set seed for reproducability
@@ -59,8 +52,21 @@ y = np.array([0 if l == 'Normal' else 1 if l == 'Tumor' else 2 for l in y])
 #NOTE: label 2 should not be in any label
 
 cv = StratifiedKFold(n_splits=10)
+
+"""
+tuned_parameters = [{'n_estimators': [10, 50, 100, 200, 500] ,
+                    'criterion': ['gini', 'entropy'],
+                     'max_features': ['auto', 'log2', 1.0, 0.5]}
+                    ]
+
+classifier = GridSearchCV(RandomForestClassifier(), tuned_parameters, n_jobs=1, iid=False, cv=5, scoring='roc_auc')
+"""
+
 classifier = RandomForestClassifier(n_estimators = 200)
 #classifier = KNeighborsClassifier()
+
+#latexify(columns=2)
+#print("Before FS:",X.shape[1])
 
 tprs = []
 aucs = []
@@ -68,10 +74,27 @@ mean_fpr = np.linspace(0, 1, 100)
 
 i = 0
 for train, test in cv.split(X, y):
+    # Feature selection
+    """
+    selector = RFECV(estimator, step=1 , cv=3, scoring='roc_auc')
+    selector = selector.fit(X[train], y[train])
+    X_r = selector.transform(X)
+    print("After FS"+str(i+1)+":",X_r.shape[1])
+    """
+    X_r = X
     # Get class probabilities for test set
-    probas_ = classifier.fit(X[train], y[train]).predict_proba(X[test])
-    #print(roc_auc_score(y[test], probas_[:, 1]))
-    #scores_class = np.array([1 if s > 0.5 else 0 for s in probas_[:, 1]])
+    classifier.fit(X_r[train], y[train])
+    """
+    # Grid search output
+    print("Grid scores on development set:")
+    means = classifier.cv_results_['mean_test_score']
+    stds = classifier.cv_results_['std_test_score']
+    for mean, std, params in zip(means, stds, classifier.cv_results_['params']):
+        print("%0.3f (+/-%0.03f) for %r"
+              % (mean, std * 2, params))
+    """
+    probas_ = classifier.predict_proba(X_r[test])
+
     # Compute ROC curve and area the curve
     fpr, tpr, thresholds = roc_curve(y[test], probas_[:, 1])
     tprs.append(interp(mean_fpr, fpr, tpr))
@@ -106,6 +129,19 @@ plt.ylabel('True Positive Rate')
 plt.title('Receiver operating characteristic (ROC)')
 plt.legend(loc="lower right")
 plt.show()
+
+# Find feature scores
+"""
+feature_scores = classifier.feature_importances_
+features = df.axes[1].values
+#for f, s in zip(features, feature_scores):
+#    print(f,s)
+
+print("Sorted Feature list:")
+feature_list = [x for _,x in sorted(zip(feature_scores, features))]
+for f in feature_list[::-1]:
+    print(f)
+"""
 
 
 '''

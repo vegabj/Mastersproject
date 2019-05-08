@@ -1,9 +1,48 @@
+"""
+Vegard Bjørgan 2019
+
+utils for scaling data sets
+"""
+
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.preprocessing import QuantileTransformer, RobustScaler
 import numpy as np
 
+def choose_scaling(df, lengths):
+    scalers = [MinMaxScaler(feature_range=(-1,1)), RobustScaler(), StandardScaler()]
+    scalers_names = ["Unscaled", "MinMax", "Robust", "Standard"]
+    print("Select a scaler:")
+    for i,s in enumerate(scalers_names):
+        print(i,s)
+    selected_scaler = int(input("Select: "))
+    if selected_scaler:
+        return set_scaler(df, lengths, scaler=scalers[selected_scaler-1])
+    else:
+        return df.values
 
-def miRNA_scaler(x):
+def set_scaler(df, lengths, scaler=MinMaxScaler(feature_range=(-1,1))):
+    dfs = []
+    dfs.append(df.head(lengths[0]))
+    current = lengths[0]
+    for i in range(1, len(lengths)):
+        dfs.append(df.tail(len(df)-current).head(lengths[i]))
+        current += lengths[i]
+    dfs = [scaler.fit_transform(d.values) for d in dfs]
+    return np.concatenate((dfs), axis=0)
+
+def set_scales(df, lengths, scaler=MinMaxScaler(feature_range=(-1,1))):
+    dfs = []
+    dfs.append(df.head(lengths[0]))
+    current = lengths[0]
+    for i in range(1, len(lengths)):
+        dfs.append(df.tail(len(df)-current).head(lengths[i]))
+        current += lengths[i]
+    # Gather means and std for each df
+    scales = [scaler.fit(d.values) for d in dfs]
+    values = [[df.mean(axis=0), df.std(axis=0)] for df in dfs]
+    return scales, values
+
+def minmax_scaler(x):
     return MinMaxScaler((-1,1)).fit_transform(x)
 
 def standard_scaler(x):
@@ -20,52 +59,14 @@ def group_scaler(df, features):
 
     return np.concatenate((xs), axis=0)
 
-def set_scaler(df, lengths):
-    dfs = []
-    dfs.append(df.head(lengths[0]))
-    current = lengths[0]
-    for i in range(1, len(lengths)):
-        dfs.append(df.tail(len(df)-current).head(lengths[i]))
-        current += lengths[i]
-    dfs = [RobustScaler().fit_transform(d.values) for d in dfs] #MinMaxScaler(feature_range=(-1,1)
-    return np.concatenate((dfs), axis=0)
-
-def set_scales(df, lengths):
-    dfs = []
-    dfs.append(df.head(lengths[0]))
-    current = lengths[0]
-    for i in range(1, len(lengths)):
-        dfs.append(df.tail(len(df)-current).head(lengths[i]))
-        current += lengths[i]
-    # Gather means and std for each df
-    scales = [StandardScaler().fit(d.values) for d in dfs]
-    values = [[df.mean(axis=0), df.std(axis=0)] for df in dfs]
-    return scales, values
-
 def robust_scaler(x):
     return RobustScaler().fit_transform(x)
 
 def quantile_scaler(x, n=1000):
     return QuantileTransformer(n_quantiles=n).fit_transform(x)
 
-def generate_scale(df, lengths, biases):
-    pass
-
 def individual_scaler(X):
     X = X.T
-    '''
-    X_scaled = []
-    for x in X:
-        # Normalization
-        max_ = max(x)
-        min_ = min(x)
-        sum_ = sum(x)
-        #X_scaled.append([val-min_ / (max_-min_) for val in x])
-        X_scaled.append([val/sum_ for val in x])
-        # Standardization
-        #X_scaled.append([val-np.mean(x) / np.var(x) for val in x])
-    '''
-    #X_scaled = MinMaxScaler().fit_transform(X)
     X_scaled = StandardScaler().fit_transform(X)
     X_scaled = np.array(X_scaled)
     return X_scaled.T
