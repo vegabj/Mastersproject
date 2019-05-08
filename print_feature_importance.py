@@ -3,6 +3,7 @@ Vegard Bjørgan 2019
 
 Prints the feature importance in SVM and Random Forest
 Creates a plot over top 20 features in SVM
+Creates a scatter plot for SVM and RF feature importance
 """
 
 import numpy as np
@@ -54,9 +55,6 @@ linear_svm = LinearSVC()
 linear_svm.fit(X, y)
 rf_classifier = RandomForestClassifier(n_estimators = 200)
 rf_classifier.fit(X, y)
-#utils.latexify(columns=2)
-#features = [feat[8:] for feat in df.axes[1].values]
-#plot_coefficients(linear_svm, features)
 
 features = [feat for feat in df.axes[1].values]
 feature_scores_svm = linear_svm.coef_.ravel()

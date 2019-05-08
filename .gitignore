@@ -110,3 +110,5 @@ Plots/*
 Convetions.txt
 Out/*
 .Rhistory
+roc_lodo.py
+roc_loo.py
