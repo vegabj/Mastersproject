@@ -107,7 +107,6 @@ venv.bak/
 Data/*
 Articles/*
 Plots/*
-Convetions.txt
 Out/*
 .Rhistory
 roc_lodo.py
