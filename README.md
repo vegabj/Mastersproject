@@ -1,5 +1,5 @@
 # Mastersproject
-Machine learning classifiers for different biases in miRNA datasets.
+Machine learning classifier for combined microRNA datasets with different biases.
 * Python 3.6
 * R 3.5.2
 
@@ -13,7 +13,6 @@ Note: Anaconda is recommended for Windows users.
 * Graphviz
 * gseapy
 * tqdm
-* R
 * rpy2
 
 ## Requirements R
@@ -36,4 +35,13 @@ Note: Anaconda is recommended for Windows users.
 * visualize_decision_tree - visualizes a decision trees as pdf files
 * dual_heatmap - Creates heatmaps from two selected score sheets that are latex friendly
 * analyze_score_sheet - Creates a heatmap from a selected score sheet
-* print_feature_importance - Prints the feature importance in both SVM and Random Forest and makes a plot for the top 20 features in SVM.
+* print_feature_importance - Prints the feature importance in both SVM and Random Forest, makes a plot for the top 20 features in SVM, creates a scatter plot over SVM and Random Forest feature importance.
+* roc_rf - Creates a ROC curve for selected data sets and scaling using Random Forest.
+* roc_svm - Creates a ROC curve for selected data sets and scaling using SVM.
+* box_plot - Creates a box plot of miRNAs.
+* density_plot - Creates a density plot of selected data sets.
+
+## Setup
+* A /Data/ folder must be created to hold data sets.
+* A /Out/ folder must be created to hold generated data such as score spreadsheets.
+* A /Plots/ folder must be created to store generated plots.

@@ -6,10 +6,11 @@ utils for scaling data sets
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.preprocessing import QuantileTransformer, RobustScaler
+from sklearn.preprocessing import Normalizer
 import numpy as np
 
 def choose_scaling(df, lengths):
-    scalers = [MinMaxScaler(feature_range=(-1,1)), RobustScaler(), StandardScaler()]
+    scalers = [MinMaxScaler(feature_range=(-1,1)), RobustScaler(), StandardScaler(), Normalizer(norm='l2')]
     scalers_names = ["Unscaled", "MinMax", "Robust", "Standard"]
     print("Select a scaler:")
     for i,s in enumerate(scalers_names):
@@ -66,7 +67,4 @@ def quantile_scaler(x, n=1000):
     return QuantileTransformer(n_quantiles=n).fit_transform(x)
 
 def individual_scaler(X):
-    X = X.T
-    X_scaled = StandardScaler().fit_transform(X)
-    X_scaled = np.array(X_scaled)
-    return X_scaled.T
+    return Normalizer(norm='l2').fit_transform(X)

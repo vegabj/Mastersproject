@@ -62,7 +62,7 @@ feature_scores_svm = linear_svm.coef_.ravel()
 print("Sorted Feature SVM list:")
 feature_list = [(x,z) for z,x in sorted(zip(feature_scores_svm, df.axes[1].values))]
 for f in feature_list[::-1]:
-    print(f)
+    print(f[0], f[1])
 
 
 feature_scores_rf = rf_classifier.feature_importances_
@@ -73,8 +73,8 @@ print(feature_df)
 
 print("Sorted Feature list RF:")
 feature_list = [(x,s) for s,x in sorted(zip(feature_scores_rf, features))]
-for f in feature_list:
-    print(f)
+for f in feature_list[::-1]:
+    print(f[0], f[1])
 
 plt.scatter(feature_scores_rf, feature_scores_svm)
 plt.show()

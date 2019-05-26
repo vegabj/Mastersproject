@@ -67,8 +67,15 @@ for idx, length in enumerate(lengths):
     current_length += length
 
     # Get class probabilities for test set
-    classifier.fit(X_train, y_train)
-    probas_ = classifier.predict_proba(X_test)
+    probas_ = classifier.fit(X_train, y_train).predict_proba(X_test)
+
+    #probas_ = classifier.predict_proba(X_test)
+    scores_class = np.array([1 if s > 0.5 else 0 for s in probas_[:, 1]])
+
+    # Compute ACC
+    scores_class = np.array([1 if s > 0.5 else 0 for s in probas_[:, 1]])
+    score = accuracy_score(y_test, scores_class)
+    print(i, score)
 
     # Compute ROC curve and area the curve
     if all(x in y_test.values for x in [0,1]):
@@ -80,9 +87,6 @@ for idx, length in enumerate(lengths):
         plt.plot(fpr, tpr, lw=1, alpha=0.3,
                  label='ROC fold %d (AUC = %0.2f)' % (i, roc_auc))
     else:
-        scores_class = np.array([1 if s > 0.5 else 0 for s in probas_[:, 1]])
-        score = accuracy_score(y_test, scores_class)
-        print(i, score)
         aucs.append(score)
         tprs.append(tprs[-1])
 

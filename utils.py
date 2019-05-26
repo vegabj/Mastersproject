@@ -57,7 +57,7 @@ def latexify(fig_width=None, fig_height=None, columns=1):
     assert(columns in [1,2])
 
     if fig_width is None:
-        fig_width = 3.39 if columns==1 else 6.9 # width in inches
+        fig_width = 4.39 if columns==1 else 6.9 # width in inches
         #fig_width = fig_width*0.838 # --> To B5 size
 
     if fig_height is None:

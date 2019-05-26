@@ -77,7 +77,8 @@ def read_hepmark_tissue_formatted():
 					if not sampleSheetDf.index[sampleSheetDf['Normal'] == id].empty
 					else sampleSheetDf.index[sampleSheetDf['Tumor'] == id][0]
 					for id in samplesheet.axes[0]]
-	samplesheet = samplesheet.drop(['XXXX', 'ta-164', 'ta157', 'tb140']) # 2 missmatch and 2 bad samples
+	samplesheet = samplesheet.drop(['XXXX', 'ta-164', 'ta157', 'tb140', 'nc014']) # 2 missmatch and 3 bad samples
+	df = df.drop(['nc014']) #  1 bad samples
 	return df, samplesheet.loc[:, 'type'], samplesheet.loc[:, 'group']
 
 

@@ -15,13 +15,13 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_auc_score, accuracy_score, balanced_accuracy_score
 from os import getcwd
 import scaler as MiRNAScaler
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.preprocessing import Normalizer, MinMaxScaler
 from tqdm import tqdm
 from sklearn.model_selection import GridSearchCV
 from sklearn import svm
 
 
-file_name = "Scores_colon_rf"
+file_name = "Scores_ds_alorithm"
 use_enrichment_score = False
 
 """

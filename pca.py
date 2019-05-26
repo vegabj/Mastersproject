@@ -58,4 +58,4 @@ finalDf_2 = pd.concat([principalDf, df[['target']]], axis = 1)
 scatter.pca_scatter(finalDf, multi_select, lengths)
 
 # A more latex friendly scatter plot
-scatter.pca_scatter_latex(finalDf, finalDf_2, multi_select, lengths)
+scatter.pca_scatter_latex(finalDf_2, finalDf, multi_select, lengths)

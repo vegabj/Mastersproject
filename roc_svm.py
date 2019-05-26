@@ -13,6 +13,7 @@ import df_utils
 from sklearn.preprocessing import StandardScaler
 from sklearn import svm
 from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import balanced_accuracy_score, accuracy_score
 import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import GridSearchCV
@@ -28,10 +29,11 @@ BOOSTING = False
 BAGGING = False
 
 # Import data
-df, target, group, lengths, es = data_reader.read_main()
+df, target, group, lengths, es = data_reader.read_main(raw=False)
 
 # Scale data
 X = MiRNAScaler.choose_scaling(df, lengths)
+#X = MiRNAScaler.individual_scaler(df)
 
 # Set seed for reproducability
 np.random.seed(0)
@@ -118,6 +120,11 @@ for train, test in cv.split(X, y):
     aucs.append(roc_auc)
     plt.plot(fpr, tpr, lw=1, alpha=0.3,
              label='ROC fold %d (AUC = %0.2f)' % (i+1, roc_auc))
+
+    # Compute and print accuracy score
+    #scores_class = np.array([1 if s > 0.5 else 0 for s in probas_])
+    #print("BACC", i, balanced_accuracy_score(y[test], scores_class))
+    #print("ACC", i, accuracy_score(y[test], scores_class))
     i += 1
 plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',
          label='Chance', alpha=.8)

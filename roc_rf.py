@@ -56,7 +56,7 @@ if GRID_SEARCH:
                         'criterion': ['gini', 'entropy'],
                          'max_features': ['auto', 'log2', 1.0, 0.5]}
                         ]
-    classifier = GridSearchCV(RandomForestClassifier(), tuned_parameters, n_jobs=1, iid=False, cv=5, scoring='roc_auc')
+    classifier = GridSearchCV(RandomForestClassifier(), tuned_parameters, n_jobs=4, iid=False, cv=5, scoring='roc_auc')
 else:
     classifier = RandomForestClassifier(n_estimators = 200)
 
@@ -77,7 +77,8 @@ for train, test in cv.split(X, y):
         print("After FS"+str(i+1)+":",X_r.shape[1])
     else:
         X_r = X
-    # Get class probabilities for test set
+
+    # Fit classifier
     classifier.fit(X_r[train], y[train])
 
     # Grid search output
@@ -89,6 +90,7 @@ for train, test in cv.split(X, y):
             print("%0.3f (+/-%0.03f) for %r"
                   % (mean, std * 2, params))
 
+    # Get class probabilities for test set
     probas_ = classifier.predict_proba(X_r[test])
 
     # Compute ROC curve and area the curve
