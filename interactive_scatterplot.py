@@ -48,7 +48,7 @@ def pca_scatter(finalDf, multi_select, lengths):
                        , picker = True)
                        #, edgecolors = edgecolors[i])
             legend_elements.append(Line2D([0], [0], marker = markers[i], color='w'
-                                    , label = 'Data set '+str(i+1), markerfacecolor='b'
+                                    , label = 'Data set '+str(i+1), markerfacecolor='g'
                                     , markersize=10))
             plots[s] = currentDf
             temp_df = temp_df.drop(currentDf.index)
@@ -181,7 +181,6 @@ def pca_scatter_latex(finalDf, finalDf_2, multi_select, lengths):
 
         temp_df = finalDf_2
 
-        ds_index = [4, 5, 8]
         for i, length in enumerate(lengths):
             currentDf = temp_df.head(length)
             color = ['r' if tar == 'Tumor' else 'b' if tar == 'Normal' else 'g' for tar in currentDf.target.values]
@@ -192,7 +191,7 @@ def pca_scatter_latex(finalDf, finalDf_2, multi_select, lengths):
                        , marker = markers[i]
                        , picker = True)
             legend_elements.append(Line2D([0], [0], marker = markers[i], color='w'
-                                    , label = 'Data set '+str(ds_index[i]), markerfacecolor='g'
+                                    , label = 'Data set '+str(i+1), markerfacecolor='g'
                                     , markersize=8))
             plots[s] = currentDf
             temp_df = temp_df.drop(currentDf.index)
